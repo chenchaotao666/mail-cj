@@ -3,6 +3,7 @@
 
 # 本地配置（包含本地路径）
 cjpm.toml
+cjpm.lock
 
 # 构建输出
 target/
