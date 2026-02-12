@@ -1,0 +1,18 @@
+[package]
+name = "mail_demo"
+version = "0.1.0"
+description = "Demo for Cangjie Mail library"
+cjc-version = "1.0.4"
+output-type = "executable"
+
+[dependencies]
+mail = { path = ".." }
+
+# openHiTLS FFI 配置
+[ffi.c]
+hitls_tls = { path = "/home/chenchaotao/.local/lib/hitls" }
+hitls_crypto = { path = "/home/chenchaotao/.local/lib/hitls" }
+hitls_bsl = { path = "/home/chenchaotao/.local/lib/hitls" }
+hitls_pki = { path = "/home/chenchaotao/.local/lib/hitls" }
+hitls_auth = { path = "/home/chenchaotao/.local/lib/hitls" }
+boundscheck = { path = "/home/chenchaotao/.local/lib/hitls" }

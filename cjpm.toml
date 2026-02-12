@@ -1,0 +1,14 @@
+[package]
+name = "mail"
+version = "0.1.0"
+description = "Cangjie Mail - SMTP email sending library for Cangjie language"
+cjc-version = "1.0.4"
+output-type = "static"
+
+[dependencies]
+
+# openHiTLS FFI 配置
+[ffi]
+c-libraries = ["hitls_tls", "hitls_crypto", "hitls_bsl", "hitls_pki", "hitls_auth", "boundscheck"]
+c-include-paths = ["/home/chenchaotao/.local/include/hitls"]
+c-library-paths = ["/home/chenchaotao/.local/lib/hitls"]

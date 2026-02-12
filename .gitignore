@@ -1,0 +1,12 @@
+# Build output
+target/
+
+# Cache
+.cache/
+
+# Environment files
+.env
+
+# IDE
+.vscode/
+.idea/
