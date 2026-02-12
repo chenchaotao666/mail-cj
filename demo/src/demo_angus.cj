@@ -1,12 +1,12 @@
 /**
- * 企业级 Handler 邮件发送演示
+ * Angus-Mail 风格的邮件发送演示
  *
- * 仿照 Java angus-mail 的 Handler 类设计，展示：
+ * 仿照 Java angus-mail (Jakarta Mail) 的 Handler 类设计，展示企业级邮件功能：
  * - 单次连接发送多封邮件（高效模式）
  * - 非高效模式（每封邮件单独连接）
- * - 支持 TO/CC/BCC
+ * - 支持 TO/CC/BCC 多种收件人类型
  * - 失败重试机制
- * - 错误码处理
+ * - 详细错误码处理
  */
 package mail_demo
 
@@ -66,15 +66,15 @@ public func testConnectionWithHandler(): Unit {
 // ============================================================================
 
 /**
- * 使用企业级 Handler 发送邮件（仿 Java angus-mail Handler）
+ * 使用 Angus-Mail 风格的 Handler 发送邮件
  *
  * 展示：
- * - 单次连接发送多封邮件
+ * - 单次连接发送多封邮件（Jakarta Mail 高效模式）
  * - 支持失败重试
  * - 详细错误码处理
  */
 public func sendWithHandler(): Unit {
-    println("\n=== 使用企业级 Handler 发送邮件 ===")
+    println("\n=== 使用 Angus-Mail 风格 Handler 发送邮件 ===")
 
     let cfg = getConfig()
 
@@ -98,14 +98,14 @@ public func sendWithHandler(): Unit {
     // 创建邮件信息
     let emailInfo = EmailInfo()
     emailInfo.addRecipient(cfg.mailTo)  // 单独发送
-    emailInfo.subject = "企业级邮件发送测试"
+    emailInfo.subject = "Angus-Mail 风格邮件发送测试"
     emailInfo.subjectPrefix = "[Cangjie Mail] "
     emailInfo.content = """
 你好！
 
-这是一封使用企业级 Handler 发送的测试邮件。
+这是一封使用 Angus-Mail 风格 Handler 发送的测试邮件。
 
-Handler 特性：
+EmailHandler 特性（仿 Jakarta Mail）：
 - 单次连接发送多封邮件（高效模式）
 - 失败自动重试（默认 3 次）
 - 详细错误码
@@ -562,10 +562,10 @@ Cangjie Mail 系统
 // ============================================================================
 
 /**
- * Handler 演示：展示 API 用法（不实际发送）
+ * Angus-Mail 风格 Handler 演示：展示 API 用法（不实际发送）
  */
-public func demoHandler(): Unit {
-    println("\n=== EmailHandler API 演示 ===")
+public func demoAngusHandler(): Unit {
+    println("\n=== Angus-Mail 风格 EmailHandler API 演示 ===")
 
     // 创建服务器配置
     let serverConfig = EmailServerConfig()

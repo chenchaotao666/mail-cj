@@ -13,7 +13,7 @@
  *   config.cj      - 配置加载器
  *   handler.cj     - 企业级邮件处理器（仿 Java angus-mail）
  *   demo_basic.cj  - 基础邮件发送演示
- *   demo_handler.cj- Handler 演示
+ *   demo_angus.cj  - Angus-Mail 风格 Handler 演示
  *   demo_utils.cj  - 工具函数和高级演示
  */
 package mail_demo
@@ -153,7 +153,7 @@ main(args: Array<String>): Int64 {
                 return 0
 
             case "--demo-handler" =>
-                demoHandler()
+                demoAngusHandler()
                 return 0
 
             // 基础发送
