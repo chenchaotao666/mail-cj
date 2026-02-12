@@ -8,6 +8,8 @@ import mail.util.*
 import std.io.*
 import std.collection.*
 
+// 导入 FileTypeMap 和 MimeUtility（同包内已可用）
+
 /**
  * Part 常量定义
  * 对应：jakarta.mail.Part
@@ -92,11 +94,43 @@ public class MimeBodyPart {
 
     /**
      * 附加文件
+     * 使用 FileTypeMap 自动检测 MIME 类型
+     * 使用 MimeUtility 编码文件名（支持中文）
      */
     public func attachFile(path: String): Unit {
         let fds = FileDataSource(path)
+
+        // 使用 FileTypeMap 获取正确的 MIME 类型
+        let mimeType = FileTypeMap.getDefaultFileTypeMap().getContentType(path)
+        _contentType = mimeType
+
         setDataHandler(DataHandler(fds))
-        setFileName(fds.getName())
+
+        // 使用 MimeUtility 编码文件名（支持中文等非 ASCII 字符）
+        let rawFileName = fds.getName()
+        let encodedFileName = MimeUtility.encodeWord(rawFileName)
+        _fileName = Some(encodedFileName)
+
+        setDisposition(PART_ATTACHMENT)
+    }
+
+    /**
+     * 附加文件（指定字符集编码文件名）
+     */
+    public func attachFile(path: String, charset: String): Unit {
+        let fds = FileDataSource(path)
+
+        // 使用 FileTypeMap 获取正确的 MIME 类型
+        let mimeType = FileTypeMap.getDefaultFileTypeMap().getContentType(path)
+        _contentType = mimeType
+
+        setDataHandler(DataHandler(fds))
+
+        // 使用指定字符集编码文件名
+        let rawFileName = fds.getName()
+        let encodedFileName = MimeUtility.encodeWord(rawFileName, charset: charset)
+        _fileName = Some(encodedFileName)
+
         setDisposition(PART_ATTACHMENT)
     }
 
@@ -377,6 +411,7 @@ public func createHtmlBodyPart(html: String): MimeBodyPart {
 
 /**
  * 创建附件 BodyPart
+ * 自动检测 MIME 类型并编码文件名（支持中文）
  */
 public func createAttachmentBodyPart(filePath: String): MimeBodyPart {
     let part = MimeBodyPart()
@@ -385,13 +420,31 @@ public func createAttachmentBodyPart(filePath: String): MimeBodyPart {
 }
 
 /**
+ * 创建附件 BodyPart（指定文件名编码字符集）
+ */
+public func createAttachmentBodyPart(filePath: String, charset: String): MimeBodyPart {
+    let part = MimeBodyPart()
+    part.attachFile(filePath, charset)
+    part
+}
+
+/**
  * 创建内嵌图片 BodyPart（从文件路径）
+ * 自动检测 MIME 类型并编码文件名
  */
 public func createInlineImageBodyPart(filePath: String, contentId: String): MimeBodyPart {
     let fds = FileDataSource(filePath)
     let part = MimeBodyPart()
     part.setDataHandler(DataHandler(fds))
-    part.setFileName(fds.getName())
+
+    // 使用 MimeUtility 编码文件名
+    let encodedName = MimeUtility.encodeWord(fds.getName())
+    part.setFileName(encodedName)
+
+    // 使用 FileTypeMap 获取 MIME 类型
+    let mimeType = FileTypeMap.getDefaultFileTypeMap().getContentType(filePath)
+    part.setContentType(mimeType)
+
     part.setContentID(contentId)
     part.setDisposition(PART_INLINE)
     part

@@ -10,3 +10,6 @@ target/
 # IDE
 .vscode/
 .idea/
+
+# Reference repos
+angus-mail/

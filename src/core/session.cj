@@ -208,10 +208,10 @@ public class Session {
                     match (protocol) {
                         case "smtp" => factory(this, false)
                         case "smtps" => factory(this, true)
-                        case _ => throw MessagingException("未知协议: ${protocol}")
+                        case _ => throw NoSuchProviderException("未知协议: ${protocol}")
                     }
                 case None =>
-                    throw MessagingException("Transport 工厂未注册，请先导入 mail.smtp 模块")
+                    throw NoSuchProviderException("Transport 工厂未注册，请先导入 mail.smtp 模块")
             }
         }
     }

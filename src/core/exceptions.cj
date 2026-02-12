@@ -179,6 +179,24 @@ public class ParseException <: MessagingException {
 }
 
 /**
+ * 找不到指定协议的提供者时抛出的异常
+ * 对应：jakarta.mail.NoSuchProviderException
+ */
+public class NoSuchProviderException <: MessagingException {
+    public init() {
+        super()
+    }
+
+    public init(message: String) {
+        super(message)
+    }
+
+    public init(message: String, cause: Exception) {
+        super(message, cause)
+    }
+}
+
+/**
  * 连接邮件服务器失败时抛出的异常
  * 对应：org.eclipse.angus.mail.util.MailConnectException
  */

@@ -1,4 +1,6 @@
-# Cangjie Mail
+# mail-cj
+
+[![GitHub](https://img.shields.io/badge/GitHub-chenchaotao666%2Fmail--cj-blue)](https://github.com/chenchaotao666/mail-cj)
 
 基于仓颉(Cangjie)编程语言的邮件发送库，提供类似 Jakarta Mail 的 API 设计，支持 TLS 加密和证书验证。
 
@@ -83,8 +85,8 @@ export LD_LIBRARY_PATH=$HOME/.local/lib/hitls:$LD_LIBRARY_PATH
 
 ```bash
 # 克隆项目
-git clone <repository-url>
-cd cangjie-mail
+git clone git@github.com:chenchaotao666/mail-cj.git
+cd mail-cj
 
 # 构建库
 cjpm build
@@ -544,7 +546,7 @@ transport.setCACertPath("/path/to/my-ca.crt")
 ## 项目结构
 
 ```
-cangjie-mail/
+mail-cj/
 ├── cjpm.toml                 # 项目配置
 ├── README.md                 # 本文档
 ├── src/                      # 源代码
@@ -616,6 +618,7 @@ MIT License
 
 ## 相关链接
 
+- [mail-cj GitHub](https://github.com/chenchaotao666/mail-cj)
 - [仓颉编程语言](https://developer.huawei.com/consumer/cn/cangjie/)
 - [openHiTLS](https://gitee.com/openHiTLS/openHiTLS)
 - [Jakarta Mail](https://eclipse-ee4j.github.io/mail/)
