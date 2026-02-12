@@ -10,7 +10,6 @@ package mail.tls
 import mail.core.*
 import mail.internet.*
 import mail.util.*
-import std.net.*
 import std.collection.*
 import std.convert.*
 

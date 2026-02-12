@@ -93,7 +93,7 @@ public class InternetAddress <: Address {
     /**
      * 解析单个地址
      */
-    private static func parseAddress(addr: String, strict: Bool): InternetAddress {
+    private static func parseAddress(addr: String, _: Bool): InternetAddress {
         let address = addr.trimAscii()
 
         // 检查格式："Personal Name" <email@domain>

@@ -11,7 +11,7 @@ import std.io.*
  */
 public class DataHandler {
     private var _dataSource: ?DataSource = None
-    private var _object: ?Object = None
+    private var _stringContent: ?String = None
     private var _objectMimeType: ?String = None
 
     /**
@@ -22,10 +22,10 @@ public class DataHandler {
     }
 
     /**
-     * 从对象和 MIME 类型构造
+     * 从字符串内容和 MIME 类型构造
      */
-    public init(object: Object, mimeType: String) {
-        _object = Some(object)
+    public init(content: String, mimeType: String) {
+        _stringContent = Some(content)
         _objectMimeType = Some(mimeType)
     }
 
@@ -50,13 +50,9 @@ public class DataHandler {
         match (_dataSource) {
             case Some(ds) => ds.getInputStream()
             case None =>
-                match (_object) {
-                    case Some(obj) =>
-                        match (obj) {
-                            case s: String => ByteArrayInputStream(s.toArray())
-                            case _ => throw Exception("无法为对象类型获取输入流")
-                        }
-                    case None => throw Exception("没有数据源或对象")
+                match (_stringContent) {
+                    case Some(content) => ByteArrayInputStream(content.toArray())
+                    case None => throw Exception("没有数据源或内容")
                 }
         }
     }
@@ -68,18 +64,15 @@ public class DataHandler {
         match (_dataSource) {
             case Some(ds) => ds
             case None =>
-                // 从对象创建数据源
-                match (_object) {
-                    case Some(obj) =>
+                // 从字符串内容创建数据源
+                match (_stringContent) {
+                    case Some(content) =>
                         let mimeType = match (_objectMimeType) {
                             case Some(mt) => mt
                             case None => "application/octet-stream"
                         }
-                        match (obj) {
-                            case s: String => ByteArrayDataSource(s, mimeType)
-                            case _ => throw Exception("无法为对象类型创建数据源")
-                        }
-                    case None => throw Exception("没有数据源或对象")
+                        ByteArrayDataSource(content, mimeType)
+                    case None => throw Exception("没有数据源或内容")
                 }
         }
     }

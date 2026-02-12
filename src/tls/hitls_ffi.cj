@@ -309,11 +309,7 @@ public func isTlsMockMode(): Bool {
  * 获取 TLS 模式描述
  */
 public func getTlsModeDescription(): String {
-    if (USE_MOCK_TLS) {
-        "模拟模式 (需要安装 openHiTLS 以启用真实 TLS)"
-    } else {
-        "FFI 模式 (使用 openHiTLS)"
-    }
+    "FFI 模式 (使用 openHiTLS)"
 }
 
 // LibC 辅助类
@@ -335,7 +331,6 @@ let AI_FAMILY_OFFSET: Int64 = 4
 let AI_SOCKTYPE_OFFSET: Int64 = 8
 let AI_ADDR_OFFSET: Int64 = 24
 let AI_ADDRLEN_OFFSET: Int64 = 16
-let AI_NEXT_OFFSET: Int64 = 40
 
 /**
  * 创建 TCP socket 并连接到指定主机和端口

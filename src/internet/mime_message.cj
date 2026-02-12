@@ -154,7 +154,7 @@ public class MimeMessage <: Message {
     /**
      * 设置主题（指定字符集）
      */
-    public override func setSubject(subject: String, charset: String): Unit {
+    public override func setSubject(subject: String, _: String): Unit {
         _subject = Some(subject)
         _saved = false
     }

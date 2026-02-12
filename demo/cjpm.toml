@@ -4,11 +4,17 @@ version = "0.1.0"
 description = "Demo for Cangjie Mail library"
 cjc-version = "1.0.4"
 output-type = "executable"
+c-arguments = ["-Woff", "unused"]
 
 [dependencies]
 mail = { path = ".." }
 
 # openHiTLS FFI 配置
+#
+# 推荐使用 ./build.sh 脚本进行编译，它会自动检测HiTLS库位置
+#
+# 如果直接使用 cjpm build，需要修改下面的路径为你的实际路径
+# 注意：cjpm 不支持 ~ 符号，必须使用绝对路径
 [ffi.c]
 hitls_tls = { path = "/home/chenchaotao/.local/lib/hitls" }
 hitls_crypto = { path = "/home/chenchaotao/.local/lib/hitls" }

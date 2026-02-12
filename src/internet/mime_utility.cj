@@ -132,7 +132,6 @@ public class MimeUtility {
             return word
         }
 
-        let charset = inner[0..firstQ]
         let encoding = inner[(firstQ + 1)..secondQ].toAsciiUpper()
         let text = inner[(secondQ + 1)..inner.size]
 
