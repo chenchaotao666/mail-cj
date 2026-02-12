@@ -23,6 +23,17 @@ cjpm build
 cjpm run
 ```
 
+## 配置说明
+
+首次使用需要配置HiTLS路径：
+```bash
+# 复制配置模板
+cp cjpm.toml.example cjpm.toml
+# 编辑cjpm.toml，修改HiTLS路径为你的实际路径
+```
+
+或者直接使用 `./build.sh`，它会自动生成配置。
+
 ## HiTLS 依赖
 
 如果还未安装openHiTLS，参考：https://gitee.com/opengauss/openHiTLS
