@@ -1,0 +1,14 @@
+[package]
+name = "mail_test"
+version = "0.1.0"
+description = "Unit tests for Cangjie Mail library"
+cjc-version = "1.0.4"
+output-type = "executable"
+
+[dependencies]
+mail = { path = ".." }
+
+# 测试入口
+[[bin]]
+name = "run_all_tests"
+path = "run_all_tests.cj"
