@@ -10,8 +10,10 @@
 - **TLS/SSL 加密**：基于 openHiTLS 实现安全传输
 - **证书验证**：支持系统 CA 证书和自定义 CA 证书
 - **多种认证方式**：LOGIN、PLAIN 认证
+- **企业级 Handler**：仿 Angus-Mail Handler，支持单连接多邮件、失败重试
 - **API 兼容性**：与 Jakarta Mail/Angus Mail 高度兼容
 - **类型安全**：充分利用仓颉的类型系统
+- **自动构建**：智能检测 HiTLS 库路径，跨平台支持
 
 ## 目录
 
@@ -93,7 +95,9 @@ cjpm build
 
 # 构建演示程序
 cd demo
-cjpm build
+./build.sh          # 推荐：自动检测 HiTLS 路径
+# 或
+cjpm build          # 需要先配置 cjpm.toml 中的 HiTLS 路径
 ```
 
 ### 运行演示
@@ -115,14 +119,22 @@ cp .env.example .env
 # MAIL_TO=recipient@example.com
 
 # 3. 运行演示
-cjpm run                              # 默认演示
-cjpm run --run-args="--help"          # 查看帮助
-cjpm run --run-args="--config"        # 查看配置
-cjpm run --run-args="--demo"          # 运行演示（不发送邮件）
-cjpm run --run-args="--send-simple"   # 发送简单邮件
-cjpm run --run-args="--send-html"     # 发送 HTML 邮件
-cjpm run --run-args="--send-attach"   # 发送带附件邮件
-cjpm run --run-args="--send-complex"  # 发送复杂邮件
+./target/release/bin/main --help           # 查看帮助
+
+# 基础发送演示
+./target/release/bin/main --send-simple    # 发送简单邮件
+./target/release/bin/main --send-html      # 发送 HTML 邮件
+./target/release/bin/main --send-attach    # 发送带附件邮件
+
+# Angus-Mail 风格 Handler 演示
+./target/release/bin/main --handler        # Handler 基础发送
+./target/release/bin/main --handler-html   # Handler HTML 邮件
+./target/release/bin/main --handler-mass   # Handler 群发邮件
+./target/release/bin/main --handler-batch  # Handler 批量发送
+
+# API 演示（不发送邮件）
+./target/release/bin/main --demo           # 基础 API 演示
+./target/release/bin/main --demo-handler   # Handler API 演示
 ```
 
 `.env` 配置文件说明：
@@ -549,6 +561,8 @@ transport.setCACertPath("/path/to/my-ca.crt")
 mail-cj/
 ├── cjpm.toml                 # 项目配置
 ├── README.md                 # 本文档
+├── docs/                     # 文档
+│   └── DESIGN.md            # 设计文档
 ├── src/                      # 源代码
 │   ├── main.cj              # 包声明
 │   ├── core/                # 核心框架
@@ -562,15 +576,16 @@ mail-cj/
 │   │   ├── internet_address.cj  # RFC 822 地址
 │   │   ├── mime_multipart.cj    # 多部分容器
 │   │   ├── mime_body_part.cj    # 消息体部分
+│   │   ├── mime_utility.cj      # MIME 编码工具
 │   │   └── internet_headers.cj  # 邮件头
 │   ├── smtp/                # SMTP 协议
 │   │   ├── smtp_transport.cj    # SMTP 传输
 │   │   └── smtp_exceptions.cj   # SMTP 异常
-│   ├── tls/                 # TLS 支持
+│   ├── tls/                 # TLS 支持（基于 openHiTLS）
 │   │   ├── tls_config.cj        # TLS 配置
 │   │   ├── tls_socket.cj        # TLS Socket
-│   │   ├── tls_smtp_transport.cj # TLS SMTP
-│   │   └── hitls_ffi.cj         # openHiTLS FFI
+│   │   ├── tls_smtp_transport.cj # TLS SMTP 传输
+│   │   └── hitls_ffi.cj         # openHiTLS FFI 绑定
 │   ├── activation/          # 数据激活框架
 │   │   ├── data_source.cj       # 数据源接口
 │   │   ├── data_handler.cj      # 数据处理器
@@ -579,12 +594,21 @@ mail-cj/
 │   └── util/                # 工具
 │       └── base64_util.cj   # Base64 编解码
 └── demo/                    # 演示程序
-    ├── cjpm.toml
+    ├── .env.example         # 配置模板
+    ├── .gitignore           # Git 忽略文件
+    ├── cjpm.toml.example    # 构建配置模板
+    ├── build.sh             # 自动构建脚本（推荐）
+    ├── README.md            # Demo 使用说明
     ├── src/
-    │   └── main.cj          # 演示代码
+    │   ├── main.cj          # 主入口
+    │   ├── config.cj        # 配置加载器
+    │   ├── handler.cj       # 企业级邮件处理器（仿 Angus-Mail）
+    │   ├── demo_basic.cj    # 基础邮件发送演示
+    │   ├── demo_angus.cj    # Angus-Mail 风格 Handler 演示
+    │   └── demo_utils.cj    # 工具函数和高级演示
     └── assets/              # 测试资源
         ├── test.txt         # 测试附件
-        └── test.png         # 测试图片
+        └── cangjie.png      # 测试图片
 ```
 
 ## 常见问题

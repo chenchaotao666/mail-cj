@@ -20,6 +20,9 @@
 ```
 cangjie-mail/
 ├── cjpm.toml                    # 项目配置文件
+├── README.md                    # 项目说明
+├── docs/
+│   └── DESIGN.md               # 本设计文档
 ├── src/
 │   └── mail/
 │       ├── core/                # 核心模块
@@ -45,6 +48,7 @@ cangjie-mail/
 │       │   ├── content_type.cj      # Content-Type 解析
 │       │   ├── content_disposition.cj # Content-Disposition 解析
 │       │   ├── mime_utility.cj      # MIME 编码工具
+│       │   ├── internet_headers.cj  # Internet 邮件头
 │       │   └── header_tokenizer.cj  # 邮件头解析器
 │       │
 │       ├── smtp/                # SMTP 协议实现
@@ -54,19 +58,35 @@ cangjie-mail/
 │       │   ├── smtp_authenticator.cj # SMTP 认证实现
 │       │   └── smtp_exceptions.cj   # SMTP 异常
 │       │
+│       ├── tls/                 # TLS 支持（基于 openHiTLS）
+│       │   ├── tls_config.cj        # TLS 配置
+│       │   ├── tls_socket.cj        # TLS Socket 封装
+│       │   ├── tls_smtp_transport.cj # TLS SMTP 传输
+│       │   └── hitls_ffi.cj         # openHiTLS FFI 绑定
+│       │
 │       └── util/                # 工具模块
-│           ├── base64.cj            # Base64 编解码
+│           ├── base64_util.cj       # Base64 编解码
 │           ├── quoted_printable.cj  # Quoted-Printable 编码
 │           ├── line_output_stream.cj    # 行输出流
 │           ├── smtp_output_stream.cj    # SMTP 输出流
 │           └── parameter_list.cj    # MIME 参数列表解析
 │
-└── tests/                       # 测试模块
-    └── mail_test/
-        ├── smtp_test.cj
-        ├── message_test.cj
-        ├── mime_utility_test.cj
-        └── data_handler_test.cj
+└── demo/                        # 演示程序
+    ├── .env.example            # 配置模板
+    ├── .gitignore              # Git 忽略文件
+    ├── cjpm.toml.example       # 构建配置模板
+    ├── build.sh                # 自动构建脚本
+    ├── README.md               # Demo 使用说明
+    ├── src/
+    │   ├── main.cj            # 主入口
+    │   ├── config.cj          # 配置加载器
+    │   ├── handler.cj         # 企业级邮件处理器（仿 Angus-Mail）
+    │   ├── demo_basic.cj      # 基础邮件发送演示
+    │   ├── demo_angus.cj      # Angus-Mail 风格 Handler 演示
+    │   └── demo_utils.cj      # 工具函数和高级演示
+    └── assets/                 # 测试资源
+        ├── test.txt           # 测试附件
+        └── cangjie.png        # 测试图片
 ```
 
 ---
@@ -2505,76 +2525,292 @@ main() {
 
 ---
 
-## 11. 实现计划
+## 11. TLS 实现（基于 openHiTLS）
 
-### 第一阶段：核心框架（Week 1-2）
+### 11.1 TlsSocket 封装
 
-1. **基础类型定义**
-   - Address / InternetAddress
-   - PasswordAuthentication
-   - 基础异常类
+```cangjie
+// tls/tls_socket.cj
 
-2. **Session 实现**
-   - 属性管理
-   - Provider 注册
-   - Transport 获取
+/**
+ * TLS Socket 封装
+ * 基于 openHiTLS 提供安全的 TLS 连接
+ */
+public class TlsSocket {
+    private var sslCtx: UnsafePointer<HitlsCtx>
+    private var ssl: UnsafePointer<HitlsSsl>
+    private var socket: TcpSocket
+    private var connected: Bool = false
 
-3. **Message 基础**
-   - Message 抽象类
-   - MimeMessage 基础实现
-   - 邮件头处理
+    /**
+     * 创建 TLS Socket
+     * @param verifyCert 是否验证服务器证书
+     * @param caCertPath 自定义 CA 证书路径（可选）
+     */
+    public init(verifyCert: Bool, caCertPath: ?String)
 
-### 第二阶段：SMTP 协议（Week 3-4）
+    /**
+     * 连接到 TLS 服务器
+     */
+    public func connect(host: String, port: Int): Unit
 
-1. **SMTPTransport 核心**
-   - 连接管理（TCP/TLS）
-   - SMTP 命令实现（HELO/EHLO/MAIL/RCPT/DATA/QUIT）
-   - 响应解析
+    /**
+     * 发送数据
+     */
+    public func write(data: Array<Byte>): Int
 
-2. **认证实现**
-   - LOGIN 认证
-   - PLAIN 认证
-   - STARTTLS 支持
+    /**
+     * 接收数据
+     */
+    public func read(buffer: Array<Byte>): Int
 
-3. **消息发送**
-   - SMTPOutputStream
-   - 数据编码
-   - 错误处理
+    /**
+     * 关闭连接
+     */
+    public func close(): Unit
+}
+```
 
-### 第三阶段：完善功能（Week 5-6）
+### 11.2 TlsSMTPTransport 实现
 
-1. **MIME 支持**
-   - MimeMultipart
-   - MimeBodyPart
-   - 附件处理
-   - Content-Type 解析
+```cangjie
+// tls/tls_smtp_transport.cj
 
-2. **编码支持**
-   - Base64
-   - Quoted-Printable
-   - 字符集处理
+/**
+ * 基于 TLS 的 SMTP 传输
+ * 对标: org.eclipse.angus.mail.smtp.SMTPSSLTransport
+ */
+public class TlsSMTPTransport <: Transport {
+    private var tlsSocket: ?TlsSocket
+    private var useSSL: Bool
+    private var verifyCert: Bool = false
+    private var caCertPath: ?String = None
 
-3. **高级功能**
-   - SMTPMessage（DSN 支持）
-   - 8BITMIME
-   - CHUNKING（可选）
+    public init(session: Session, useSSL: Bool)
 
-### 第四阶段：测试与文档（Week 7-8）
+    /**
+     * 设置证书验证
+     */
+    public func setVerifyCert(verify: Bool): Unit
 
-1. **单元测试**
-   - 地址解析测试
-   - 消息构建测试
-   - 编码测试
+    /**
+     * 设置自定义 CA 证书
+     */
+    public func setCACertPath(path: String): Unit
 
-2. **集成测试**
-   - 真实 SMTP 服务器测试
-   - SSL/TLS 测试
-   - 各种邮件格式测试
+    protected override func protocolConnect(
+        host: String,
+        port: Int,
+        user: String,
+        password: String
+    ): Bool
+}
+```
 
-3. **文档编写**
-   - API 文档
-   - 使用指南
-   - 示例代码
+---
+
+## 12. 企业级 Handler（Angus-Mail 风格）
+
+### 12.1 EmailHandler 设计
+
+```cangjie
+// demo/src/handler.cj
+
+/**
+ * 企业级邮件处理器
+ * 仿 Angus-Mail Handler，提供高级邮件发送功能
+ */
+public class EmailHandler {
+    private var serverConfig: EmailServerConfig
+    private var transport: ?TlsSMTPTransport
+    private var debug: Bool = false
+    private var retryTimes: Int = 0
+    private var retryInterval: Int64 = 1000
+
+    /**
+     * 创建 Handler
+     */
+    public init(serverConfig: EmailServerConfig)
+
+    /**
+     * 发送邮件（高效模式：单次连接发送多封）
+     */
+    public func sendEmail(emailInfo: EmailInfo): ArrayList<EmailStatus>
+
+    /**
+     * 发送邮件（非高效模式：每封邮件单独连接）
+     */
+    public func sendEmailInefficient(emailInfo: EmailInfo): ArrayList<EmailStatus>
+
+    /**
+     * 设置重试次数
+     */
+    public func setRetryTimes(times: Int): Unit
+
+    /**
+     * 设置重试间隔（毫秒）
+     */
+    public func setRetryInterval(interval: Int64): Unit
+}
+```
+
+### 12.2 EmailInfo 配置类
+
+```cangjie
+/**
+ * 邮件信息配置
+ * 支持 TO/CC/BCC 多种收件人类型
+ */
+public class EmailInfo {
+    // 单独发送的收件人（每人收到独立邮件）
+    private var recipients: ArrayList<String>
+
+    // 群发收件人（所有人能看到彼此）
+    private var massRecipients: ArrayList<String>
+
+    // 抄送收件人
+    private var ccRecipients: ArrayList<String>
+
+    // 密送收件人（其他人不可见）
+    private var bccRecipients: ArrayList<String>
+
+    public var subject: String
+    public var subjectPrefix: String
+    public var subjectSuffix: String
+    public var content: String
+    public var contentType: String = "text/plain"
+    public var charset: String = "UTF-8"
+    public var signature: String = ""
+
+    private var attachments: ArrayList<String>
+
+    /**
+     * 添加单独发送的收件人
+     */
+    public func addRecipient(email: String): Unit
+
+    /**
+     * 添加群发收件人
+     */
+    public func addMassRecipient(email: String): Unit
+
+    /**
+     * 添加抄送收件人
+     */
+    public func addCcRecipient(email: String): Unit
+
+    /**
+     * 添加密送收件人
+     */
+    public func addBccRecipient(email: String): Unit
+
+    /**
+     * 添加附件
+     */
+    public func addAttachment(filePath: String): Unit
+}
+```
+
+---
+
+## 13. 实现状态
+
+### 已完成功能 ✅
+
+**核心框架**
+- ✅ Session 会话管理
+- ✅ Transport 传输抽象
+- ✅ Message/MimeMessage 消息实现
+- ✅ Address/InternetAddress 地址实现
+- ✅ 完整的异常体系
+
+**Internet 邮件规范**
+- ✅ MimeMessage 完整实现
+- ✅ MimeMultipart/MimeBodyPart
+- ✅ InternetHeaders 邮件头处理
+- ✅ MimeUtility 编码工具
+- ✅ 附件和内嵌图片支持
+
+**TLS 支持**
+- ✅ TlsSocket 基于 openHiTLS
+- ✅ TlsSMTPTransport TLS 传输
+- ✅ 证书验证（系统 CA + 自定义 CA）
+- ✅ SSL/TLS 握手和加密通信
+
+**SMTP 协议**
+- ✅ SMTPTransport 基础实现
+- ✅ EHLO/HELO/MAIL/RCPT/DATA 命令
+- ✅ LOGIN/PLAIN 认证
+- ✅ TLS 加密传输
+
+**数据激活框架**
+- ✅ DataSource 接口
+- ✅ FileDataSource 文件数据源
+- ✅ ByteArrayDataSource 内存数据源
+- ✅ DataHandler 数据处理器
+
+**工具模块**
+- ✅ Base64 编解码
+- ✅ MIME 编码/解码
+- ✅ 邮件头折叠/展开
+
+**演示程序**
+- ✅ 完整的 Demo 程序
+- ✅ EmailHandler（Angus-Mail 风格）
+- ✅ 配置文件管理（.env）
+- ✅ 自动构建脚本（build.sh）
+- ✅ 多种发送模式演示
+
+### 待实现功能 🚧
+
+**SMTP 高级特性**
+- 🚧 STARTTLS 支持
+- 🚧 8BITMIME 扩展
+- 🚧 DSN（Delivery Status Notification）
+- 🚧 SIZE 扩展
+
+**优化功能**
+- 🚧 连接池
+- 🚧 异步发送
+- 🚧 批量发送优化
+
+**其他协议**
+- ⏳ IMAP 接收协议
+- ⏳ POP3 接收协议
+
+---
+
+## 14. 实现计划
+
+### ~~第一阶段：核心框架~~ ✅
+
+1. ✅ 基础类型定义
+2. ✅ Session 实现
+3. ✅ Message 基础
+
+### ~~第二阶段：SMTP 协议~~ ✅
+
+1. ✅ SMTPTransport 核心
+2. ✅ 认证实现
+3. ✅ 消息发送
+
+### ~~第三阶段：完善功能~~ ✅
+
+1. ✅ MIME 支持
+2. ✅ 编码支持
+3. ✅ TLS 加密
+
+### ~~第四阶段：Demo 与文档~~ ✅
+
+1. ✅ 企业级 Handler
+2. ✅ 完整演示程序
+3. ✅ 使用文档
+
+### 第五阶段：高级特性与优化（进行中）
+
+1. 🚧 STARTTLS 支持
+2. 🚧 性能优化
+3. 🚧 更多 SMTP 扩展
 
 ---
 
