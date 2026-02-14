@@ -213,6 +213,20 @@ public class MimeUtility {
      * 解码文本
      */
     public static func decodeText(text: String): String {
+        // 如果整个字符串就是一个编码词（只有一对=?和?=），直接解码
+        if (text.startsWith("=?") && text.endsWith("?=")) {
+            // 检查是否只有一对编码标记
+            let firstEnd = text.indexOf("?=")
+            match (firstEnd) {
+                case Some(pos) =>
+                    if (pos == text.size - 2) {
+                        // 只有一对标记，是单个编码词
+                        return decodeWord(text)
+                    }
+                case None => ()
+            }
+        }
+
         // 处理可能包含多个编码段的文本
         var result = ""
         var current = ""
