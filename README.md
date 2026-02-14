@@ -14,6 +14,7 @@
 - **API 兼容性**：与 Jakarta Mail/Angus Mail 高度兼容
 - **类型安全**：充分利用仓颉的类型系统
 - **自动构建**：智能检测 HiTLS 库路径，跨平台支持
+- **完善测试**：38+ 单元测试用例，覆盖核心功能
 
 ## 目录
 
@@ -25,6 +26,7 @@
 - [API 文档](#api-文档)
 - [使用示例](#使用示例)
 - [证书配置](#证书配置)
+- [测试](#测试)
 - [项目结构](#项目结构)
 
 ## 环境要求
@@ -555,6 +557,64 @@ Cangjie Mail 会自动查找以下路径的系统 CA 证书：
 transport.setCACertPath("/path/to/my-ca.crt")
 ```
 
+## 测试
+
+项目包含完善的单元测试，覆盖核心功能。
+
+### 运行测试
+
+```bash
+# 运行所有测试
+cjpm test
+
+# 查看详细输出
+cjpm test --show-all-output
+
+# 运行特定测试包
+cjpm test src/test/core
+cjpm test src/test/internet
+```
+
+### 测试覆盖
+
+**Core 包测试** (11 个测试用例)
+- ✅ Session 会话管理
+  - Session 创建与配置
+  - 默认 Session 单例模式
+  - 属性获取与设置
+  - 调试模式控制
+  - Transport 获取
+
+**Internet 包测试** (27 个测试用例)
+- ✅ InternetAddress 地址解析
+  - 基本地址创建
+  - 带显示名的地址
+  - 地址列表解析
+  - 地址验证
+  - 特殊字符处理
+  - 空字符串处理
+  - 地址相等性比较
+
+- ✅ MimeUtility MIME 编码
+  - Base64 编码/解码
+  - Quoted-Printable 编码/解码
+  - 自动编码选择
+  - 多编码词处理
+  - 邮件头折叠
+  - 混合内容编码
+  - 长文本处理
+
+### 测试结果示例
+
+```
+--------------------------------------------------------------------------------------------------
+Project tests finished, RESULT:
+Summary: TOTAL: 38
+    PASSED: 38, SKIPPED: 0, ERROR: 0
+    FAILED: 0
+--------------------------------------------------------------------------------------------------
+```
+
 ## 项目结构
 
 ```
@@ -591,8 +651,15 @@ mail-cj/
 │   │   ├── data_handler.cj      # 数据处理器
 │   │   ├── file_data_source.cj  # 文件数据源
 │   │   └── byte_array_data_source.cj # 内存数据源
-│   └── util/                # 工具
-│       └── base64_util.cj   # Base64 编解码
+│   ├── util/                # 工具
+│   │   └── base64_util.cj   # Base64 编解码
+│   └── test/                # 测试
+│       ├── main.cj          # 测试入口
+│       ├── core/            # 核心测试
+│       │   └── session_test.cj  # Session 测试
+│       └── internet/        # Internet 测试
+│           ├── internet_address_test.cj  # 地址解析测试
+│           └── mime_utility_test.cj      # MIME 编码测试
 └── demo/                    # 演示程序
     ├── .env.example         # 配置模板
     ├── .gitignore           # Git 忽略文件
