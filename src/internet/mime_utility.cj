@@ -312,4 +312,30 @@ public class MimeUtility {
 
         result
     }
+
+    /**
+     * 展开折叠的头行（RFC 2822 Unfolding）
+     * 移除 CRLF 后紧跟 WSP（空格/制表符）的折叠换行
+     * 对应：jakarta.mail.internet.MimeUtility.unfold
+     */
+    public static func unfold(s: String): String {
+        var result = ""
+        var i = 0
+        let runes = s.toRuneArray()
+        while (i < runes.size) {
+            let ch = runes[i]
+            if (ch == r'\r' && i + 1 < runes.size && runes[i + 1] == r'\n'
+                && i + 2 < runes.size && (runes[i + 2] == r' ' || runes[i + 2] == r'\t')) {
+                // 跳过 CRLF，保留后面的空白（或也跳过）
+                i += 2  // skip \r\n, keep the WSP
+            } else if (ch == r'\n' && i + 1 < runes.size
+                && (runes[i + 1] == r' ' || runes[i + 1] == r'\t')) {
+                i += 1  // skip lone \n, keep WSP
+            } else {
+                result += ch.toString()
+                i += 1
+            }
+        }
+        result
+    }
 }

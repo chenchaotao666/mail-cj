@@ -190,6 +190,24 @@ public class Session {
     }
 
     /**
+     * 获取所有已注册的提供者
+     */
+    public func getProviders(): Array<Provider> {
+        let result = ArrayList<Provider>()
+        for ((_, p) in _providers) {
+            result.add(p)
+        }
+        result.toArray()
+    }
+
+    /**
+     * 注册（或替换）提供者
+     */
+    public func setProvider(provider: Provider): Unit {
+        _providers[provider.getProtocol()] = provider
+    }
+
+    /**
      * 获取默认协议（smtp）的传输器
      */
     public func getTransport(): Transport {

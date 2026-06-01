@@ -323,6 +323,93 @@ public class LibC {
     }
 }
 
+// ============================================================================
+// 超时与原始 socket I/O
+// ============================================================================
+
+// POSIX 原始 socket 读写
+@C
+foreign func read(fd: Int32, buf: CPointer<Unit>, count: UInt64): Int64
+
+@C
+foreign func write(fd: Int32, buf: CPointer<Unit>, count: UInt64): Int64
+
+// Socket 选项
+@C
+foreign func setsockopt(sockfd: Int32, level: Int32, optname: Int32, optval: CPointer<Unit>, optlen: UInt32): Int32
+
+// Linux socket 常量
+public let SOL_SOCKET: Int32 = 1
+public let SO_RCVTIMEO: Int32 = 20
+public let SO_SNDTIMEO: Int32 = 21
+// sizeof(struct timeval) on 64-bit Linux: sec(Int64) + usec(Int64) = 16 bytes
+let TIMEVAL_STRUCT_SIZE: UInt64 = 16
+
+/**
+ * 为 socket 设置读/写超时（基于 SO_RCVTIMEO / SO_SNDTIMEO）
+ * readMs/writeMs 为 0 时不设置对应超时
+ */
+public func setSocketTimeouts(fd: Int32, readMs: Int64, writeMs: Int64): Unit {
+    if (fd < 0) { return }
+    unsafe {
+        if (readMs > 0) {
+            let tvPtr = malloc(TIMEVAL_STRUCT_SIZE)
+            let tvBytes = CPointer<UInt8>(tvPtr)
+            CPointer<Int64>(CPointer<Unit>(tvBytes)).write(readMs / 1000)
+            CPointer<Int64>(CPointer<Unit>(tvBytes + 8)).write((readMs % 1000) * 1000)
+            let _ = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, tvPtr, UInt32(TIMEVAL_STRUCT_SIZE))
+            free(tvPtr)
+        }
+        if (writeMs > 0) {
+            let tvPtr = malloc(TIMEVAL_STRUCT_SIZE)
+            let tvBytes = CPointer<UInt8>(tvPtr)
+            CPointer<Int64>(CPointer<Unit>(tvBytes)).write(writeMs / 1000)
+            CPointer<Int64>(CPointer<Unit>(tvBytes + 8)).write((writeMs % 1000) * 1000)
+            let _ = setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, tvPtr, UInt32(TIMEVAL_STRUCT_SIZE))
+            free(tvPtr)
+        }
+    }
+}
+
+/**
+ * 从原始 socket fd 读取单个字节
+ * 返回字节值(0..255)，超时或连接关闭返回 -1
+ */
+public func rawSocketReadByte(fd: Int32): Int32 {
+    unsafe {
+        let buf = malloc(1)
+        let n = read(fd, buf, 1u64)
+        let result: Int32 = if (n > 0) { Int32(CPointer<UInt8>(buf).read()) } else { -1i32 }
+        free(buf)
+        result
+    }
+}
+
+/**
+ * 向原始 socket fd 写入字节数组
+ */
+public func rawSocketWrite(fd: Int32, data: Array<Byte>): Unit {
+    if (data.isEmpty()) { return }
+    unsafe {
+        let ptr = malloc(UInt64(data.size))
+        let cPtr = CPointer<UInt8>(ptr)
+        for (i in 0..data.size) {
+            (cPtr + i).write(UInt8(data[i]))
+        }
+        let _ = write(fd, ptr, UInt64(data.size))
+        free(ptr)
+    }
+}
+
+/**
+ * 关闭原始 socket fd（包装 POSIX close 以避免与类方法同名冲突）
+ */
+public func closeFd(fd: Int32): Unit {
+    if (fd >= 0) {
+        unsafe { let _ = close(fd) }
+    }
+}
+
 // addrinfo结构体大小（近似值，实际可能因平台而异）
 let ADDRINFO_SIZE: Int64 = 48
 

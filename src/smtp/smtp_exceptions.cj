@@ -27,13 +27,8 @@ public class SMTPSendFailedException <: SendFailedException {
         _returnCode = returnCode
     }
 
-    public func getCommand(): String {
-        _command
-    }
-
-    public func getReturnCode(): Int64 {
-        _returnCode
-    }
+    public func getCommand(): String { _command }
+    public func getReturnCode(): Int64 { _returnCode }
 }
 
 /**
@@ -52,22 +47,14 @@ public class SMTPAddressFailedException <: SendFailedException {
         message: String
     ) {
         super(message)
-        _address = address
-        _command = command
+        _address    = address
+        _command    = command
         _returnCode = returnCode
     }
 
-    public func getAddress(): InternetAddress {
-        _address
-    }
-
-    public func getCommand(): String {
-        _command
-    }
-
-    public func getReturnCode(): Int64 {
-        _returnCode
-    }
+    public func getAddress(): InternetAddress { _address }
+    public func getCommand(): String { _command }
+    public func getReturnCode(): Int64 { _returnCode }
 }
 
 /**
@@ -86,20 +73,38 @@ public class SMTPSenderFailedException <: SendFailedException {
         message: String
     ) {
         super(message)
-        _address = address
-        _command = command
+        _address    = address
+        _command    = command
         _returnCode = returnCode
     }
 
-    public func getAddress(): InternetAddress {
-        _address
+    public func getAddress(): InternetAddress { _address }
+    public func getCommand(): String { _command }
+    public func getReturnCode(): Int64 { _returnCode }
+}
+
+/**
+ * SMTP 地址成功通知（部分发送场景：记录已成功投递的地址）
+ * 对应：org.eclipse.angus.mail.smtp.SMTPAddressSucceededException
+ */
+public class SMTPAddressSucceededException <: SendFailedException {
+    private let _address: InternetAddress
+    private let _command: String
+    private let _returnCode: Int64
+
+    public init(
+        address: InternetAddress,
+        command: String,
+        returnCode: Int64,
+        message: String
+    ) {
+        super(message, [address], Array<Address>(), Array<Address>())
+        _address    = address
+        _command    = command
+        _returnCode = returnCode
     }
 
-    public func getCommand(): String {
-        _command
-    }
-
-    public func getReturnCode(): Int64 {
-        _returnCode
-    }
+    public func getAddress(): InternetAddress { _address }
+    public func getCommand(): String { _command }
+    public func getReturnCode(): Int64 { _returnCode }
 }

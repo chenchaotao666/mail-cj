@@ -4,6 +4,7 @@
 package mail.internet
 
 import mail.core.*
+import mail.util.*
 import std.collection.*
 
 /**
@@ -204,28 +205,34 @@ public class InternetAddress <: Address {
     public override func toString(): String {
         match (_personal) {
             case Some(name) =>
-                // 检查名称是否需要引用
-                var needsQuoting = false
+                // 检查是否含非 ASCII 字符（需要 RFC 2047 编码）
+                var hasNonAscii = false
                 for (ch in name.toRuneArray()) {
-                    if (ch == r'"' || ch == r',' || ch == r'<' || ch == r'>' || ch == r'@') {
-                        needsQuoting = true
-                        break
-                    }
+                    if (UInt32(ch) > 127u32) { hasNonAscii = true; break }
                 }
 
-                if (needsQuoting) {
-                    // 转义名称中的引号
-                    var escaped = ""
+                if (hasNonAscii) {
+                    // RFC 2047 encoded-word: =?UTF-8?B?<base64>?=
+                    let encoded = Base64Util.encode(name.toArray())
+                    "=?UTF-8?B?${encoded}?= <${_address}>"
+                } else {
+                    // ASCII 名称：检查是否需要引号
+                    var needsQuoting = false
                     for (ch in name.toRuneArray()) {
-                        if (ch == r'"') {
-                            escaped += "\\\""
-                        } else {
-                            escaped += ch.toString()
+                        if (ch == r'"' || ch == r',' || ch == r'<' || ch == r'>' || ch == r'@') {
+                            needsQuoting = true
+                            break
                         }
                     }
-                    "\"${escaped}\" <${_address}>"
-                } else {
-                    "${name} <${_address}>"
+                    if (needsQuoting) {
+                        var escaped = ""
+                        for (ch in name.toRuneArray()) {
+                            if (ch == r'"') { escaped += "\\\"" } else { escaped += ch.toString() }
+                        }
+                        "\"${escaped}\" <${_address}>"
+                    } else {
+                        "${name} <${_address}>"
+                    }
                 }
             case None =>
                 _address
@@ -237,5 +244,19 @@ public class InternetAddress <: Address {
      */
     public func toUnicodeString(): String {
         toString()
+    }
+
+    /**
+     * 获取本机地址（由 mail.smtp.localhost 属性或 "localhost" 决定）
+     * 对应：jakarta.mail.internet.InternetAddress.getLocalAddress
+     */
+    public static func getLocalAddress(session: Session): InternetAddress {
+        let hostname = session.getProperty("mail.smtp.localhost", "localhost")
+        let user = session.getProperty("mail.smtp.user", "")
+        if (user.isEmpty()) {
+            InternetAddress("postmaster@${hostname}")
+        } else {
+            InternetAddress("${user}@${hostname}")
+        }
     }
 }

@@ -32,6 +32,8 @@ public class TlsSocket {
     private var _connected: Bool = false
     private var _host: String = ""
     private var _port: UInt16 = 0
+    private var _readTimeoutMs: Int64 = 0
+    private var _writeTimeoutMs: Int64 = 0
 
     /**
      * 使用配置构造
@@ -63,6 +65,11 @@ public class TlsSocket {
         _fd = createTcpConnection(host, port)
         if (_fd < 0) {
             throw TlsException("创建 TCP 连接失败: ${host}:${port}")
+        }
+
+        // 在 TLS 握手前应用 I/O 超时
+        if (_readTimeoutMs > 0 || _writeTimeoutMs > 0) {
+            unsafe { setSocketTimeouts(_fd, _readTimeoutMs, _writeTimeoutMs) }
         }
 
         unsafe {
@@ -150,6 +157,11 @@ public class TlsSocket {
         }
 
         _fd = fd
+
+        // 应用 I/O 超时
+        if (_readTimeoutMs > 0 || _writeTimeoutMs > 0) {
+            unsafe { setSocketTimeouts(_fd, _readTimeoutMs, _writeTimeoutMs) }
+        }
 
         // 确保配置已初始化
         if (!_config.isInitialized()) {
@@ -386,6 +398,33 @@ public class TlsSocket {
                 case _ => TLS_1_2
             }
         }
+    }
+
+    /**
+     * 设置读超时（毫秒），可在 connect 前后调用
+     */
+    public func setReadTimeout(ms: Int64): Unit {
+        _readTimeoutMs = ms
+        if (_fd >= 0) {
+            unsafe { setSocketTimeouts(_fd, ms, 0) }
+        }
+    }
+
+    /**
+     * 设置写超时（毫秒）
+     */
+    public func setWriteTimeout(ms: Int64): Unit {
+        _writeTimeoutMs = ms
+        if (_fd >= 0) {
+            unsafe { setSocketTimeouts(_fd, 0, ms) }
+        }
+    }
+
+    /**
+     * 获取底层 socket fd，供 STARTTLS 升级使用
+     */
+    public func getFd(): Int32 {
+        _fd
     }
 
     /**

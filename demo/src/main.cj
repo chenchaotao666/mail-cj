@@ -92,6 +92,19 @@ func printHelp(): Unit {
   --handler-batch    使用 Handler 批量发送
   --handler-slow     使用 Handler 非高效模式（每封独立连接）
 
+API 完善性验证（无需真实服务器）:
+  --demo-api         验证 1.1-1.8 节新增 API（providers/listeners/MimeMessage 扩展等）
+P3 新功能验证（无需真实服务器）:
+  --demo-p3          验证 PIPELINING / DSN / SMTPUTF8
+P2 完善性验证（无需真实服务器）:
+  --demo-p2          验证 P2（InputStream解析/复制构造/NOOP/BDAT/8BITMIME/SMTPMessage/Listener/DIGEST-MD5）
+P1/P0 差距修复验证（无需真实服务器）:
+  --demo-p1          验证 P1 修复（XOAUTH2/NTLM/可插拔认证/Bcc过滤/编码/sendPartial）
+P0 差距修复验证（无需真实服务器）:
+  --demo-p0          验证超时/STARTTLS/API对称/部分失败修复（不发邮件）
+  --test-starttls    用真实服务器测试 STARTTLS 587 端口连接
+  --test-timeout     验证超时机制（连接快速失败而非挂死）
+
 配置:
   请先复制 .env.example 为 .env 并填写您的 SMTP 配置：
     cp .env.example .env
@@ -105,6 +118,11 @@ func printHelp(): Unit {
   cjpm run --run-args="--handler-complex" # 发送复杂邮件
   cjpm run --run-args="--send-simple"     # 基础发送
   cjpm run --run-args="--config"          # 查看配置
+  cjpm run --run-args="--demo-p3"         # P3 新功能验证
+  cjpm run --run-args="--demo-p2"         # P2 完善性验证
+  cjpm run --run-args="--demo-p0"         # P0 修复验证
+  cjpm run --run-args="--test-starttls"   # STARTTLS 连接测试
+  cjpm run --run-args="--test-timeout"    # 超时机制验证
 """)
 }
 
@@ -248,6 +266,44 @@ main(args: Array<String>): Int64 {
                 let cfg = getConfig()
                 if (!cfg.validate()) { return 1 }
                 sendInefficientWithHandler()
+                return 0
+
+            // SMTP 协议差距验证
+            case "--demo-smtp" =>
+                demoSmtpProtocol()
+                return 0
+
+            // API 完善性验证
+            case "--demo-api" =>
+                demoApiCompleteness()
+                return 0
+
+            // P3 新功能
+            case "--demo-p3" =>
+                demoP3Features()
+                return 0
+
+            // P2 完善性验证
+            case "--demo-p2" =>
+                demoP2Features()
+                return 0
+
+            // P1 修复验证
+            case "--demo-p1" =>
+                demoP1Features()
+                return 0
+
+            // P0 修复验证
+            case "--demo-p0" =>
+                demoP0Features()
+                return 0
+
+            case "--test-starttls" =>
+                testStartTLSConnection()
+                return 0
+
+            case "--test-timeout" =>
+                testTimeoutBehavior()
                 return 0
 
             // 未知选项

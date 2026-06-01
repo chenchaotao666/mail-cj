@@ -246,6 +246,33 @@ public class MimeBodyPart {
     }
 
     /**
+     * 获取 part 内容（文本类型返回字符串）
+     * 对应：jakarta.mail.internet.MimeBodyPart.getContent
+     */
+    public func getContent(): ?String {
+        match (_content) {
+            case Some(bytes) =>
+                try {
+                    Some(String.fromUtf8(bytes))
+                } catch (_: Exception) {
+                    None
+                }
+            case None => None
+        }
+    }
+
+    /**
+     * 获取内容大小（字节）；未知返回 -1
+     * 对应：jakarta.mail.internet.MimeBodyPart.getSize
+     */
+    public func getSize(): Int64 {
+        match (_content) {
+            case Some(bytes) => Int64(bytes.size)
+            case None => -1
+        }
+    }
+
+    /**
      * 判断是否是指定的 MIME 类型
      */
     public func isMimeType(mimeType: String): Bool {

@@ -125,6 +125,44 @@ public class InternetHeaders {
     }
 
     /**
+     * 获取名称在列表中的头（大小写不敏感）
+     * 对应：jakarta.mail.internet.InternetHeaders.getMatchingHeaders
+     */
+    public func getMatchingHeaders(names: Array<String>): ArrayList<Header> {
+        let lowerNames = ArrayList<String>()
+        for (n in names) { lowerNames.add(n.toAsciiLower()) }
+
+        let result = ArrayList<Header>()
+        for (h in _headers) {
+            let lowerName = h.getName().toAsciiLower()
+            for (n in lowerNames) {
+                if (n == lowerName) { result.add(h); break }
+            }
+        }
+        result
+    }
+
+    /**
+     * 获取名称不在列表中的头（大小写不敏感）
+     * 对应：jakarta.mail.internet.InternetHeaders.getNonMatchingHeaders
+     */
+    public func getNonMatchingHeaders(names: Array<String>): ArrayList<Header> {
+        let lowerNames = ArrayList<String>()
+        for (n in names) { lowerNames.add(n.toAsciiLower()) }
+
+        let result = ArrayList<Header>()
+        for (h in _headers) {
+            let lowerName = h.getName().toAsciiLower()
+            var matched = false
+            for (n in lowerNames) {
+                if (n == lowerName) { matched = true; break }
+            }
+            if (!matched) { result.add(h) }
+        }
+        result
+    }
+
+    /**
      * 将头写入字符串
      */
     public func toString(): String {

@@ -99,6 +99,49 @@ public class MimeMultipart {
     }
 
     /**
+     * 按引用移除 BodyPart（遍历查找第一个地址相同的 part）
+     * 对应：jakarta.mail.internet.MimeMultipart.removeBodyPart(MimeBodyPart)
+     */
+    public func removeBodyPart(part: MimeBodyPart): Bool {
+        let newParts = ArrayList<MimeBodyPart>()
+        var found = false
+        for (i in 0.._parts.size) {
+            let p = _parts[i]
+            if (!found && p.getContentID() == part.getContentID()
+                && p.getContentType() == part.getContentType()) {
+                found = true  // 跳过第一个匹配项
+            } else {
+                newParts.add(p)
+            }
+        }
+        if (found) { _parts = newParts }
+        found
+    }
+
+    /**
+     * 按 Content-ID 获取 BodyPart
+     * 对应：jakarta.mail.internet.MimeMultipart.getBodyPart(String contentID)
+     */
+    public func getBodyPart(contentID: String): ?MimeBodyPart {
+        for (i in 0.._parts.size) {
+            let p = _parts[i]
+            match (p.getContentID()) {
+                case Some(cid) where cid == contentID || cid == "<${contentID}>" => return Some(p)
+                case _ => ()
+            }
+        }
+        None
+    }
+
+    /**
+     * 是否已完整（发送侧：若有任何 part 则视为完整）
+     * 对应：jakarta.mail.internet.MimeMultipart.isComplete
+     */
+    public func isComplete(): Bool {
+        !_parts.isEmpty()
+    }
+
+    /**
      * 获取 BodyPart 数量
      */
     public func getCount(): Int64 {
