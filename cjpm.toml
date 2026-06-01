@@ -10,12 +10,15 @@ output-type = "static"
 # openHiTLS FFI 配置
 #
 # 用户需要安装 openHiTLS 并设置以下环境变量：
-#   export HITLS_INCLUDE=/path/to/hitls/include
 #   export HITLS_LIB=/path/to/hitls/lib
-#   export LIBRARY_PATH=$HITLS_LIB:$LIBRARY_PATH
 #   export LD_LIBRARY_PATH=$HITLS_LIB:$LD_LIBRARY_PATH
-#   export C_INCLUDE_PATH=$HITLS_INCLUDE:$C_INCLUDE_PATH
 #
-# 或者安装到系统标准路径 /usr/local/lib 和 /usr/local/include
-[ffi]
-c-libraries = ["hitls_tls", "hitls_crypto", "hitls_bsl", "hitls_pki", "hitls_auth", "boundscheck"]
+# 默认查找 ~/.local/lib/hitls；可通过环境变量 HITLS_LIB 覆盖。
+# 若 HiTLS 安装在系统标准路径 /usr/local/lib，删除下方 path 字段即可。
+[ffi.c]
+hitls_tls    = { path = "/home/chenchaotao/.local/lib/hitls" }
+hitls_crypto = { path = "/home/chenchaotao/.local/lib/hitls" }
+hitls_bsl    = { path = "/home/chenchaotao/.local/lib/hitls" }
+hitls_pki    = { path = "/home/chenchaotao/.local/lib/hitls" }
+hitls_auth   = { path = "/home/chenchaotao/.local/lib/hitls" }
+boundscheck  = { path = "/home/chenchaotao/.local/lib/hitls" }

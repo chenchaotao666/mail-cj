@@ -1,192 +1,142 @@
-/**
- * Session 测试
- * 使用仓颉官方 unittest 框架
- * 参照 angus-mail 的 Session 测试设计
- */
 package mail.test.core
 
 import mail.core.*
+import mail.smtp.*
 import std.collection.*
 
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+func props(pairs: Array<(String, String)>): HashMap<String, String> {
+    let m = HashMap<String, String>()
+    for ((k, v) in pairs) { m[k] = v }
+    m
+}
+
+func emptySession(): Session { Session.getInstance(HashMap<String, String>()) }
+
+// ─── property read/write ────────────────────────────────────────────────────
+
 @Test
-public class SessionTest {
-    /**
-     * 测试 Session 创建
-     */
+public class SessionPropertyTest {
+
     @TestCase
-    func testSessionCreation(): Unit {
-        let props = HashMap<String, String>()
-        props["mail.smtp.host"] = "smtp.example.com"
-        props["mail.smtp.port"] = "587"
-
-        let session = Session.getInstance(props)
-
-        // 验证属性
-        let host = session.getProperty("mail.smtp.host")
-        @Expect(host.getOrThrow(), "smtp.example.com")
+    func getExistingProperty(): Unit {
+        let s = Session.getInstance(props([
+            ("mail.smtp.host", "smtp.example.com"),
+            ("mail.smtp.port", "587")
+        ]))
+        @Expect(s.getProperty("mail.smtp.host"), Some("smtp.example.com"))
+        @Expect(s.getProperty("mail.smtp.port"), Some("587"))
     }
 
-    /**
-     * 测试默认 Session（单例）
-     */
     @TestCase
-    func testDefaultSession(): Unit {
-        let props = HashMap<String, String>()
-        props["mail.smtp.host"] = "smtp.example.com"
-
-        let session1 = Session.getDefaultInstance(props)
-        let session2 = Session.getDefaultInstance(props)
-
-        // 验证 Session 创建成功
-        @Assert(session1.getProperty("mail.smtp.host").isSome())
-        @Assert(session2.getProperty("mail.smtp.host").isSome())
-        // TODO: 验证是同一个实例（需要支持引用相等性比较）
+    func getMissingPropertyReturnsNone(): Unit {
+        @Expect(emptySession().getProperty("mail.smtp.nonexist"), None)
     }
 
-    /**
-     * 测试属性管理 - 获取单个属性
-     */
     @TestCase
-    func testPropertyGet(): Unit {
-        let props = HashMap<String, String>()
-        props["mail.smtp.host"] = "smtp.example.com"
-        props["mail.smtp.port"] = "587"
-        props["mail.smtp.auth"] = "true"
-
-        let session = Session.getInstance(props)
-
-        @Expect(session.getProperty("mail.smtp.host").getOrThrow(), "smtp.example.com")
-        @Expect(session.getProperty("mail.smtp.port").getOrThrow(), "587")
+    func getMissingPropertyWithDefaultReturnsDefault(): Unit {
+        @Expect(emptySession().getProperty("mail.smtp.nonexist", "fallback"), "fallback")
     }
 
-    /**
-     * 测试属性管理 - 不存在的属性
-     */
     @TestCase
-    func testPropertyNonExistent(): Unit {
-        let props = HashMap<String, String>()
-        let session = Session.getInstance(props)
-
-        @Expect(session.getProperty("mail.smtp.nonexist"), None)
+    func setPropertyOverridesInitialValue(): Unit {
+        let s = Session.getInstance(props([("mail.smtp.port", "25")]))
+        s.setProperty("mail.smtp.port", "587")
+        @Expect(s.getProperty("mail.smtp.port"), Some("587"))
     }
 
-    /**
-     * 测试属性管理 - 带默认值
-     */
     @TestCase
-    func testPropertyWithDefault(): Unit {
-        let props = HashMap<String, String>()
-        let session = Session.getInstance(props)
-
-        @Expect(session.getProperty("mail.smtp.nonexist", "default"), "default")
+    func setPropertyAddsNewKey(): Unit {
+        let s = emptySession()
+        s.setProperty("mail.smtp.host", "smtp.new.com")
+        @Expect(s.getProperty("mail.smtp.host"), Some("smtp.new.com"))
     }
 
-    // 注：以下 Transport 测试需要导入 mail.smtp 模块，暂时注释
-    // - testGetTransportDefault: 需要注册 SMTP transport 工厂
-    // - testGetTransportSMTP: 需要注册 SMTP transport 工厂
-
-    // /**
-    //  * 测试 Transport 获取 - 默认
-    //  */
-    // @TestCase
-    // func testGetTransportDefault(): Unit {
-    //     let props = HashMap<String, String>()
-    //     props["mail.smtp.host"] = "smtp.example.com"
-    //
-    //     let session = Session.getInstance(props)
-    //     let transport = session.getTransport()
-    //
-    //     // Transport 对象创建成功
-    // }
-    //
-    // /**
-    //  * 测试 Transport 获取 - SMTP
-    //  */
-    // @TestCase
-    // func testGetTransportSMTP(): Unit {
-    //     let props = HashMap<String, String>()
-    //     props["mail.smtp.host"] = "smtp.example.com"
-    //
-    //     let session = Session.getInstance(props)
-    //     let transport = session.getTransport("smtp")
-    //
-    //     // Transport 对象创建成功
-    // }
-
-    /**
-     * 测试调试模式 - 默认关闭
-     */
     @TestCase
-    func testDebugModeDefaultOff(): Unit {
-        let props = HashMap<String, String>()
-        let session = Session.getInstance(props)
+    func emptyPropsSessionCreatesSuccessfully(): Unit {
+        @Assert(emptySession().getProperty("anything").isNone())
+    }
+}
 
-        @Assert(!session.getDebug())
+// ─── debug mode ─────────────────────────────────────────────────────────────
+
+@Test
+public class SessionDebugTest {
+
+    @TestCase
+    func debugOffByDefault(): Unit {
+        @Assert(!emptySession().getDebug())
     }
 
-    /**
-     * 测试调试模式 - 开启
-     */
     @TestCase
-    func testDebugModeTurnOn(): Unit {
-        let props = HashMap<String, String>()
-        let session = Session.getInstance(props)
-
-        session.setDebug(true)
-        @Assert(session.getDebug())
+    func setDebugTrue(): Unit {
+        let s = emptySession()
+        s.setDebug(true)
+        @Assert(s.getDebug())
     }
 
-    /**
-     * 测试调试模式 - 关闭
-     */
     @TestCase
-    func testDebugModeTurnOff(): Unit {
-        let props = HashMap<String, String>()
-        let session = Session.getInstance(props)
+    func setDebugFalseAfterTrue(): Unit {
+        let s = emptySession()
+        s.setDebug(true)
+        s.setDebug(false)
+        @Assert(!s.getDebug())
+    }
+}
 
-        session.setDebug(true)
-        session.setDebug(false)
-        @Assert(!session.getDebug())
+// ─── singleton ──────────────────────────────────────────────────────────────
+
+@Test
+public class SessionSingletonTest {
+
+    @TestCase
+    func getDefaultInstanceReturnsFunctionalSession(): Unit {
+        let s1 = Session.getDefaultInstance(props([("mail.smtp.host", "a.com")]))
+        let s2 = Session.getDefaultInstance(props([("mail.smtp.host", "a.com")]))
+        @Assert(s1.getProperty("mail.smtp.host").isSome())
+        @Assert(s2.getProperty("mail.smtp.host").isSome())
+    }
+}
+
+// ─── transport factory ──────────────────────────────────────────────────────
+
+@Test
+public class SessionTransportTest {
+
+    @TestCase
+    func getTransportReturnsInstance(): Unit {
+        initSMTPModule()
+        let s = Session.getInstance(props([("mail.smtp.host", "smtp.example.com")]))
+        let t = s.getTransport()
+        @Assert(!t.isConnected())
     }
 
-    /**
-     * 测试属性设置 - 运行时设置
-     */
     @TestCase
-    func testPropertySet(): Unit {
-        let props = HashMap<String, String>()
-        props["mail.smtp.host"] = "smtp.example.com"
-
-        let session = Session.getInstance(props)
-        session.setProperty("mail.smtp.port", "587")
-
-        @Expect(session.getProperty("mail.smtp.port").getOrThrow(), "587")
+    func getTransportByProtocol(): Unit {
+        initSMTPModule()
+        let s = emptySession()
+        let t = s.getTransport("smtp")
+        @Assert(!t.isConnected())
     }
 
-    /**
-     * 测试边界情况 - 空属性创建
-     */
     @TestCase
-    func testEmptyProps(): Unit {
-        let emptyProps = HashMap<String, String>()
-        let session = Session.getInstance(emptyProps)
-
-        // 验证 Session 创建成功
-        @Assert(session.getProperty("nonexist").isNone())
-    }
-
-    /**
-     * 测试边界情况 - 不存在的协议
-     */
-    @TestCase
-    func testNonExistentProtocol(): Unit {
+    func getTransportUnknownProtocolThrows(): Unit {
+        let s = emptySession()
+        var threw = false
         try {
-            let props = HashMap<String, String>()
-            let session = Session.getInstance(props)
-            session.getTransport("nonexistent-protocol")
-            @Assert(false)  // 应该抛出异常
-        } catch (e: MessagingException) {
-            @Assert(true)  // 预期行为
+            s.getTransport("nonexistent-protocol")
+        } catch (_: MessagingException) {
+            threw = true
         }
+        @Assert(threw)
+    }
+
+    @TestCase
+    func getTransportWithAuthenticator(): Unit {
+        initSMTPModule()
+        let auth = SimpleAuthenticator("user@example.com", "secret")
+        let s = Session.getInstance(HashMap<String, String>(), auth)
+        @Assert(s.getAuthenticator().isSome())
     }
 }
