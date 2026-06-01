@@ -71,7 +71,7 @@ cangjie-mail/
 │           ├── smtp_output_stream.cj    # SMTP 输出流
 │           └── parameter_list.cj    # MIME 参数列表解析
 │
-└── demo/                        # 演示程序
+└── examples/                        # 演示程序
     ├── .env.example            # 配置模板
     ├── .gitignore              # Git 忽略文件
     ├── cjpm.toml.example       # 构建配置模板
@@ -2614,7 +2614,7 @@ public class TlsSMTPTransport <: Transport {
 ### 12.1 EmailHandler 设计
 
 ```cangjie
-// demo/src/handler.cj
+// examples/src/handler.cj
 
 /**
  * 企业级邮件处理器

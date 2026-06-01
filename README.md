@@ -96,7 +96,7 @@ cd mail-cj
 cjpm build
 
 # 构建演示程序
-cd demo
+cd examples
 ./build.sh          # 推荐：自动检测 HiTLS 路径
 # 或
 cjpm build          # 需要先配置 cjpm.toml 中的 HiTLS 路径
@@ -107,7 +107,7 @@ cjpm build          # 需要先配置 cjpm.toml 中的 HiTLS 路径
 演示程序使用 `.env` 文件管理配置，避免在代码中硬编码敏感信息。
 
 ```bash
-cd demo
+cd examples
 
 # 1. 复制配置模板
 cp .env.example .env
@@ -660,7 +660,7 @@ mail-cj/
 │       └── internet/        # Internet 测试
 │           ├── internet_address_test.cj  # 地址解析测试
 │           └── mime_utility_test.cj      # MIME 编码测试
-└── demo/                    # 演示程序
+└── examples/                    # 演示程序
     ├── .env.example         # 配置模板
     ├── .gitignore           # Git 忽略文件
     ├── cjpm.toml.example    # 构建配置模板
