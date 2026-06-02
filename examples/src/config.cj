@@ -1,210 +1,114 @@
-/**
- * 环境配置加载器
- *
- * 从 .env 文件加载配置，支持以下格式：
- * - KEY=value
- * - KEY="value with spaces"
- * - # 注释行
- */
 package mail_demo
 
-import std.fs.*
 import std.collection.*
 import std.convert.*
+import std.fs.*
 
-/**
- * 邮件配置
- */
 public class MailConfig {
-    // SMTP 服务器配置
     public var smtpHost: String = "smtp.example.com"
     public var smtpPort: Int64 = 465
     public var smtpUser: String = ""
     public var smtpPassword: String = ""
-
-    // 邮件地址配置
     public var mailFrom: String = ""
+    public var mailFromName: String = "Mail Example"
     public var mailTo: String = ""
-    public var mailFromName: String = "Cangjie Mail"
+    public var mailCc: String = ""
+    public var mailBcc: String = ""
+    public var oauth2Token: String = ""
+    public var attachmentPath: String = "assets/test.txt"
+    public var debug: Bool = false
 
-    // 安全配置
-    public var verifyCert: Bool = false
-    public var caCertPath: ?String = None
-
-    // 调试配置
-    public var debug: Bool = true
-
-    /**
-     * 从 .env 文件加载配置
-     */
-    public static func load(envPath: String): MailConfig {
-        let config = MailConfig()
-        let envMap = loadEnvFile(envPath)
-
-        // SMTP 配置
-        match (envMap.get("SMTP_HOST")) {
-            case Some(v) => config.smtpHost = v
-            case None => ()
-        }
-        match (envMap.get("SMTP_PORT")) {
-            case Some(v) =>
-                try {
-                    config.smtpPort = Int64.parse(v)
-                } catch (_: Exception) {}
-            case None => ()
-        }
-        match (envMap.get("SMTP_USER")) {
-            case Some(v) => config.smtpUser = v
-            case None => ()
-        }
-        match (envMap.get("SMTP_PASSWORD")) {
-            case Some(v) => config.smtpPassword = v
-            case None => ()
-        }
-
-        // 邮件地址配置
-        match (envMap.get("MAIL_FROM")) {
-            case Some(v) => config.mailFrom = v
-            case None => ()
-        }
-        match (envMap.get("MAIL_TO")) {
-            case Some(v) => config.mailTo = v
-            case None => ()
-        }
-        match (envMap.get("MAIL_FROM_NAME")) {
-            case Some(v) => config.mailFromName = v
-            case None => ()
-        }
-
-        // 安全配置
-        match (envMap.get("VERIFY_CERT")) {
-            case Some("true") => config.verifyCert = true
-            case Some("false") => config.verifyCert = false
-            case _ => ()
-        }
-        match (envMap.get("CA_CERT_PATH")) {
-            case Some(v) where !v.isEmpty() => config.caCertPath = Some(v)
-            case _ => ()
-        }
-
-        // 调试配置
-        match (envMap.get("DEBUG")) {
-            case Some("true") => config.debug = true
-            case Some("false") => config.debug = false
-            case _ => ()
-        }
-
-        config
+    public func smtpsProps(): HashMap<String, String> {
+        let p = HashMap<String, String>()
+        p["mail.smtps.host"]                    = smtpHost
+        p["mail.smtps.port"]                    = smtpPort.toString()
+        p["mail.smtps.auth"]                    = "true"
+        p["mail.smtps.ssl.checkserveridentity"] = "false"
+        p["mail.smtps.auth.mechanisms"]         = "LOGIN PLAIN"
+        p
     }
 
-    /**
-     * 验证配置是否完整
-     */
-    public func validate(): Bool {
-        if (smtpHost.isEmpty()) {
-            println("错误：SMTP_HOST 未配置")
-            return false
-        }
-        if (smtpUser.isEmpty()) {
-            println("错误：SMTP_USER 未配置")
-            return false
-        }
-        if (smtpPassword.isEmpty()) {
-            println("错误：SMTP_PASSWORD 未配置")
-            return false
-        }
-        if (mailFrom.isEmpty()) {
-            println("错误：MAIL_FROM 未配置")
-            return false
-        }
-        if (mailTo.isEmpty()) {
-            println("错误：MAIL_TO 未配置")
-            return false
-        }
-        true
+    public func starttlsProps(): HashMap<String, String> {
+        let p = HashMap<String, String>()
+        p["mail.smtp.host"]              = smtpHost
+        p["mail.smtp.port"]              = "587"
+        p["mail.smtp.auth"]              = "true"
+        p["mail.smtp.starttls.enable"]   = "true"
+        p["mail.smtp.starttls.required"] = "true"
+        p["mail.smtp.auth.mechanisms"]   = "LOGIN PLAIN"
+        p
     }
 
-    /**
-     * 打印配置信息（隐藏敏感信息）
-     */
     public func printInfo(): Unit {
-        println("当前配置：")
-        println("  SMTP 服务器: ${smtpHost}:${smtpPort}")
-        println("  SMTP 用户: ${smtpUser}")
-        println("  SMTP 密码: ${maskPassword(smtpPassword)}")
-        println("  发件人: ${mailFromName} <${mailFrom}>")
-        println("  收件人: ${mailTo}")
-        println("  证书验证: ${if (verifyCert) { "启用" } else { "禁用" }}")
-        match (caCertPath) {
-            case Some(path) => println("  CA 证书: ${path}")
-            case None => ()
+        println("SMTP Host : ${smtpHost}:${smtpPort}")
+        println("SMTP User : ${smtpUser}")
+        println("From      : ${mailFromName} <${mailFrom}>")
+        println("To        : ${mailTo}")
+        if (!mailCc.isEmpty())  { println("CC        : ${mailCc}") }
+        if (!mailBcc.isEmpty()) { println("BCC       : ${mailBcc}") }
+    }
+
+    public static func load(envPath: String): MailConfig {
+        let cfg = MailConfig()
+        let env = loadEnvFile(envPath)
+
+        ifSet(env, "SMTP_HOST")     { v => cfg.smtpHost = v }
+        ifSet(env, "SMTP_PORT")     { v => try { cfg.smtpPort = Int64.parse(v) } catch (_: Exception) {} }
+        ifSet(env, "SMTP_USER")     { v => cfg.smtpUser = v }
+        ifSet(env, "SMTP_PASSWORD") { v => cfg.smtpPassword = v }
+        ifSet(env, "MAIL_FROM")     { v => cfg.mailFrom = v }
+        ifSet(env, "MAIL_FROM_NAME"){ v => cfg.mailFromName = v }
+        ifSet(env, "MAIL_TO")       { v => cfg.mailTo = v }
+        ifSet(env, "MAIL_CC")       { v => cfg.mailCc = v }
+        ifSet(env, "MAIL_BCC")      { v => cfg.mailBcc = v }
+        ifSet(env, "OAUTH2_TOKEN")  { v => cfg.oauth2Token = v }
+        ifSet(env, "ATTACHMENT_PATH"){ v => cfg.attachmentPath = v }
+        match (env.get("DEBUG")) {
+            case Some("true")  => cfg.debug = true
+            case Some("false") => cfg.debug = false
+            case _ => ()
         }
-        println("  调试模式: ${if (debug) { "开启" } else { "关闭" }}")
+        if (cfg.mailFrom.isEmpty()) { cfg.mailFrom = cfg.smtpUser }
+        cfg
     }
 }
 
-/**
- * 加载 .env 文件
- */
+func ifSet(env: HashMap<String, String>, key: String, action: (String) -> Unit): Unit {
+    match (env.get(key)) {
+        case Some(v) where !v.isEmpty() => action(v)
+        case _ => ()
+    }
+}
+
 func loadEnvFile(path: String): HashMap<String, String> {
     let result = HashMap<String, String>()
-
     try {
-        let bytes = File.readFrom(path)
-        let content = String.fromUtf8(bytes)
-
+        let content = String.fromUtf8(File.readFrom(path))
         for (line in content.split("\n")) {
             let trimmed = line.trimAscii()
-
-            // 跳过空行和注释
-            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
-                continue
-            }
-
-            // 解析 KEY=value
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) { continue }
             match (trimmed.indexOf("=")) {
-                case Some(eqIndex) where eqIndex > 0 =>
-                    let key = trimmed[0..eqIndex].trimAscii()
-                    var value = trimmed[(eqIndex + 1)..trimmed.size].trimAscii()
-
-                    // 去除引号
-                    if (value.size >= 2) {
-                        if ((value.startsWith("\"") && value.endsWith("\"")) ||
-                            (value.startsWith("'") && value.endsWith("'"))) {
-                            value = value[1..(value.size - 1)]
-                        }
+                case Some(eq) where eq > 0 =>
+                    let key = trimmed[0..eq].trimAscii()
+                    var val = trimmed[(eq + 1)..trimmed.size].trimAscii()
+                    if (val.size >= 2 &&
+                        ((val.startsWith("\"") && val.endsWith("\"")) ||
+                         (val.startsWith("'")  && val.endsWith("'")))) {
+                        val = val[1..(val.size - 1)]
                     }
-
-                    result[key] = value
+                    result[key] = val
                 case _ => ()
             }
         }
     } catch (e: Exception) {
         println("警告：无法加载配置文件 ${path}: ${e.message}")
     }
-
     result
 }
 
-/**
- * 隐藏密码（只显示前后各2个字符）
- */
-func maskPassword(password: String): String {
-    if (password.size <= 4) {
-        return "****"
-    }
-    let prefix = password[0..2]
-    let suffix = password[(password.size - 2)..password.size]
-    "${prefix}****${suffix}"
-}
-
-/**
- * 检查 .env 文件是否存在
- */
 public func envFileExists(path: String): Bool {
     try {
-        let file = File(path, OpenMode.Read)
-        file.close()
+        File(path, OpenMode.Read).close()
         true
     } catch (_: Exception) {
         false
