@@ -1,11 +1,10 @@
 /**
  * 场景 5：复杂邮件（HTML + 内嵌图片 + 附件）
  *
- * 结构：
+ * 结构（Cangjie MimeBodyPart 不支持嵌套 MimeMultipart，与 Jakarta Mail 略有差异）：
  *   multipart/mixed
- *     ├── multipart/related
- *     │     ├── text/html
- *     │     └── image/png  (inline, cid:logo)
+ *     ├── text/html        (with cid:logo)
+ *     ├── image/png        (inline, cid:logo)
  *     └── attachment
  *
  * 对标 angus-examples：SendComplex.java
@@ -45,18 +44,13 @@ public func sendComplex(): Unit {
 
     // ── 内嵌图片 ──────────────────────────────────────────────
     let imgPart = MimeBodyPart()
-    let ds = ByteArrayDataSource(createMinimalPng(), "image/png")
-    imgPart.setDataHandler(DataHandler(ds))
+    if (envFileExists(TEST_IMAGE)) {
+        imgPart.attachFile(TEST_IMAGE)
+    } else {
+        imgPart.setDataHandler(DataHandler(ByteArrayDataSource(createMinimalPng(), "image/png")))
+    }
     imgPart.setContentID("<logo>")
     imgPart.setDisposition(PART_INLINE)
-
-    // ── multipart/related（HTML + 图片）────────────────────────
-    let related = MimeMultipart(MULTIPART_RELATED)
-    related.addBodyPart(htmlPart)
-    related.addBodyPart(imgPart)
-    let relatedPart = MimeBodyPart()
-    relatedPart.setContentType("multipart/related")
-    relatedPart.setDataHandler(DataHandler(createRelatedDataSource(related)))
 
     // ── 附件 ──────────────────────────────────────────────────
     let attachPart = MimeBodyPart()
@@ -65,7 +59,8 @@ public func sendComplex(): Unit {
 
     // ── 顶层 multipart/mixed ──────────────────────────────────
     let mixed = MimeMultipart(MULTIPART_MIXED)
-    mixed.addBodyPart(relatedPart)
+    mixed.addBodyPart(htmlPart)
+    mixed.addBodyPart(imgPart)
     mixed.addBodyPart(attachPart)
     msg.setContent(mixed)
 
@@ -78,10 +73,4 @@ public func sendComplex(): Unit {
     }
 
     println("✓ 复杂邮件发送成功")
-}
-
-func createRelatedDataSource(mp: MimeMultipart): ByteArrayDataSource {
-    let out = ByteArrayOutputStream()
-    mp.writeTo(out)
-    ByteArrayDataSource(out.toArray(), mp.getContentType())
 }

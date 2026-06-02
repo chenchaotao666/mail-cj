@@ -30,12 +30,6 @@ class SendWithAttachment {
         // 附件部分
         MimeBodyPart attachPart = new MimeBodyPart();
         File file = new File(cfg.attachmentPath());
-        if (!file.exists()) {
-            // 如果文件不存在，创建一个临时文本附件用于测试
-            file = File.createTempFile("sample", ".txt");
-            file.deleteOnExit();
-            java.nio.file.Files.writeString(file.toPath(), "这是测试附件内容。");
-        }
         attachPart.attachFile(file);
         // 中文文件名 RFC 2047 编码
         attachPart.setFileName(MimeUtility.encodeText(file.getName(), "UTF-8", "B"));

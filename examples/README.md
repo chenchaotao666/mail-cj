@@ -10,7 +10,7 @@ mail-cj（仓颉邮件库）邮件发送场景覆盖示例，与 [angus-examples
 | `--02` | HTML 邮件 | `sendHtml()` | `SendHtml` |
 | `--03` | 带附件邮件（multipart/mixed） | `sendWithAttachment()` | `SendWithAttachment` |
 | `--04` | HTML + 内嵌图片（multipart/related） | `sendWithInlineImage()` | `SendWithInlineImage` |
-| `--05` | 复杂邮件（HTML + 图片 + 附件） | `sendComplex()` | `SendComplex` |
+| `--05` | 复杂邮件（HTML + 图片 + 附件）¹ | `sendComplex()` | `SendComplex` |
 | `--06` | 多收件人（TO / CC / BCC） | `sendCcBcc()` | `SendCcBcc` |
 | `--07` | STARTTLS 连接（端口 587） | `sendWithStartTLS()` | `SendWithStartTLS` |
 | `--08` | Reply-To 与 reply() 回复 | `sendReply()` | `SendReply` |
@@ -95,6 +95,8 @@ cp cjpm.toml.example cjpm.toml
 | `OAUTH2_TOKEN` | OAuth2 Bearer Token（场景 16） | `ya29.xxxx` |
 | `ATTACHMENT_PATH` | 附件路径（场景 3/5） | `assets/test.txt` |
 | `DEBUG` | 开启 SMTP 调试输出 | `false` |
+
+> ¹ Cangjie 的 `MimeBodyPart` 不支持嵌套 `MimeMultipart`，场景 5 将 HTML、内嵌图片、附件平铺在同一个 `multipart/mixed` 中，与 Jakarta Mail 的 `multipart/mixed → multipart/related` 双层结构略有差异，但主流邮件客户端均可正常渲染。
 
 ## 与 angus-examples 的 API 对应关系
 

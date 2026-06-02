@@ -37,9 +37,12 @@ class SendReply {
         System.out.println("✓ 自定义 Reply-To 邮件发送成功");
 
         // ── 场景 b：生成回复邮件 ────────────────────────────────────
+        // reply(false) 会把 TO 设为原邮件的 Reply-To（support@example.com），
+        // 覆盖为实际收件人才能收到
         original.saveChanges();
-        MimeMessage reply = (MimeMessage) original.reply(false); // false = 只回复发件人
+        MimeMessage reply = (MimeMessage) original.reply(false);
         reply.setFrom(new InternetAddress(cfg.mailFrom(), cfg.mailFromName()));
+        reply.setRecipient(Message.RecipientType.TO, new InternetAddress(cfg.mailTo()));
         reply.setText("这是对原始邮件的回复。\n\n在 angus-mail 中使用 reply(false) 生成。\n"
             + "注意：Subject 自动加了 Re: 前缀，且包含 In-Reply-To 头。", "UTF-8");
 

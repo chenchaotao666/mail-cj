@@ -20,9 +20,7 @@ public func sendBulk(): Unit {
     let cfg = getConfig()
 
     // 模拟收件人列表（实际场景从数据库或配置读取）
-    let recipients = [cfg.mailTo]
-    // "user2@example.com",
-    // "user3@example.com"
+    let recipients = [cfg.mailTo, cfg.mailFrom]
 
     let session = Session.getInstance(cfg.smtpsProps())
     session.setDebug(cfg.debug)

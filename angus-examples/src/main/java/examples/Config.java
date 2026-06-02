@@ -24,7 +24,8 @@ public class Config {
     public String mailCc()       { return get("MAIL_CC", ""); }
     public String mailBcc()      { return get("MAIL_BCC", ""); }
     public String oauth2Token()  { return get("OAUTH2_TOKEN", ""); }
-    public String attachmentPath(){ return get("ATTACHMENT_PATH", "src/main/resources/sample.pdf"); }
+    public String attachmentPath(){ return get("ATTACHMENT_PATH", "src/main/resources/test.txt"); }
+    public String imagePath()     { return get("IMAGE_PATH",      "src/main/resources/logo.jpg"); }
     public boolean debug()       { return "true".equalsIgnoreCase(get("DEBUG", "false")); }
 
     /** 构造发送用 Session Properties（SMTPS 465 直连 SSL）。 */

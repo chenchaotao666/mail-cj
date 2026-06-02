@@ -18,10 +18,11 @@ import java.nio.charset.StandardCharsets;
 class SendFromInputStream {
 
     // 模拟一封原始 RFC 2822 格式邮件（通常来自文件、数据库或消息队列）
+    // Subject 使用 RFC 2047 encoded-word（Base64）编码中文，避免解析乱码
     private static final String RAW_EMAIL = """
             From: template@example.com
             To: placeholder@example.com
-            Subject: 月度报告模板
+            Subject: =?UTF-8?B?5pyI5bqV5oiQ5ZCR5qih5p2l?=
             Content-Type: text/plain; charset=UTF-8
             MIME-Version: 1.0
 

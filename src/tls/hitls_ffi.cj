@@ -58,6 +58,12 @@ public let HITLS_RET_WANT_READ: Int32 = -2
 public let HITLS_RET_WANT_WRITE: Int32 = -3
 
 /**
+ * 记录层 "正常" 状态码 — 服务端发送 close_notify 后连接已干净关闭
+ * hitls_error.h: HITLS_REC_NORMAL_IO_EOF = 0x020A0016
+ */
+public let HITLS_REC_NORMAL_IO_EOF: Int32 = 34209814
+
+/**
  * UIO 控制命令
  * BSL_UIO_SET_PEER_IP_ADDR = 0x000
  * BSL_UIO_GET_PEER_IP_ADDR = 0x001

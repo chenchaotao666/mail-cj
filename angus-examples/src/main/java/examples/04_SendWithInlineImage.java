@@ -36,8 +36,7 @@ class SendWithInlineImage {
 
         // 内嵌图片 part
         MimeBodyPart imagePart = new MimeBodyPart();
-        String imagePath = "examples/assets/logo.jpg";
-        java.io.File imgFile = new java.io.File("../" + imagePath);
+        java.io.File imgFile = new java.io.File(cfg.imagePath());
         if (imgFile.exists()) {
             imagePart.attachFile(imgFile);
         } else {

@@ -47,8 +47,13 @@ class SendComplex {
 
         // ── 内嵌图片 ──────────────────────────────────────────────
         MimeBodyPart imgPart = new MimeBodyPart();
-        imgPart.setDataHandler(new DataHandler(
-            new ByteArrayDataSource(createMinimalPng(), "image/png")));
+        java.io.File imgFile = new java.io.File(cfg.imagePath());
+        if (imgFile.exists()) {
+            imgPart.attachFile(imgFile);
+        } else {
+            imgPart.setDataHandler(new DataHandler(
+                new ByteArrayDataSource(createMinimalPng(), "image/png")));
+        }
         imgPart.setContentID("<logo>");
         imgPart.setDisposition(MimePart.INLINE);
 
@@ -62,11 +67,6 @@ class SendComplex {
         // ── 附件 ──────────────────────────────────────────────────
         MimeBodyPart attachPart = new MimeBodyPart();
         File file = new File(cfg.attachmentPath());
-        if (!file.exists()) {
-            file = File.createTempFile("report", ".txt");
-            file.deleteOnExit();
-            java.nio.file.Files.writeString(file.toPath(), "测试报告内容\n生成时间：" + java.time.LocalDateTime.now());
-        }
         attachPart.attachFile(file);
         attachPart.setFileName(MimeUtility.encodeText(file.getName(), "UTF-8", "B"));
 

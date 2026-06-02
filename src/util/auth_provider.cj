@@ -109,6 +109,18 @@ public class PlainMechanism <: SmtpAuthMechanism {
 // RFC 6750 / Google XOAUTH2
 // ─────────────────────────────────────────────────────────────────────────────
 
+// 334 响应格式："334 <base64-json>"，解码后给出可读的错误详情
+private func decode334Error(resp: String): String {
+    let parts = resp.trimAscii().split(" ")
+    if (parts.size >= 2) {
+        let b64 = parts[1].trimAscii()
+        try {
+            return Base64Util.decodeToString(b64)
+        } catch (_: Exception) {}
+    }
+    resp
+}
+
 public class XOAuth2Mechanism <: SmtpAuthMechanism {
     public func getName(): String { "XOAUTH2" }
 
@@ -125,8 +137,12 @@ public class XOAuth2Mechanism <: SmtpAuthMechanism {
 
         // 334 表示认证失败的 JSON 错误，发空响应使服务器返回 535
         if (ctx.getLastCode() == 334) {
+            let errorDetail = decode334Error(resp)
             ctx.sendCommand("")
             resp = ctx.readResponse()
+            if (resp.trimAscii().isEmpty()) {
+                resp = errorDetail
+            }
         }
 
         if (ctx.getLastCode() != 235) {

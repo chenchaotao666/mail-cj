@@ -564,7 +564,13 @@ public open class MimeMessage <: Message {
             return
         }
 
-        // 从消息属性更新头
+        // 保留用户通过 setHeader/addHeader 设置的自定义头
+        let standardHeaders = ["date", "from", "sender", "to", "cc", "bcc",
+            "reply-to", "subject", "message-id", "content-type",
+            "content-transfer-encoding", "mime-version"]
+        let customHeaders = _headers.getNonMatchingHeaders(standardHeaders.toArray())
+
+        // 从消息属性重建标准头
         _headers = InternetHeaders()
 
         // Date 头
@@ -625,6 +631,11 @@ public open class MimeMessage <: Message {
 
         // MIME-Version 头
         _headers.setHeader("MIME-Version", "1.0")
+
+        // 补回自定义头
+        for (h in customHeaders) {
+            _headers.addHeader(h.getName(), h.getValue())
+        }
 
         _saved = true
     }

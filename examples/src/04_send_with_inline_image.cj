@@ -33,15 +33,12 @@ public func sendWithInlineImage(): Unit {
 </body></html>
 """)
 
-    // 内嵌图片 part
+    // 内嵌图片 part（文件存在则使用，否则用最小 PNG 占位）
     let imagePart = MimeBodyPart()
-    let imgFile = "../" + cfg.attachmentPath.replace("test.txt", "logo.jpg")
-    try {
-        imagePart.attachFile(imgFile)
-    } catch (_: Exception) {
-        // 图片不存在时用最小 PNG 占位
-        let ds = ByteArrayDataSource(createMinimalPng(), "image/png")
-        imagePart.setDataHandler(DataHandler(ds))
+    if (envFileExists(TEST_IMAGE)) {
+        imagePart.attachFile(TEST_IMAGE)
+    } else {
+        imagePart.setDataHandler(DataHandler(ByteArrayDataSource(createMinimalPng(), "image/png")))
     }
     imagePart.setContentID("<logo_cid>")
     imagePart.setDisposition(PART_INLINE)

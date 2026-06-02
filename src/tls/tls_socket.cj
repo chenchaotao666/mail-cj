@@ -307,6 +307,11 @@ public class TlsSocket {
                 readLenCPtr
             )
 
+            if (ret == HITLS_REC_NORMAL_IO_EOF) {
+                free(ptr)
+                free(readLenPtr)
+                return 0
+            }
             if (ret != HITLS_SUCCESS && ret != HITLS_RET_WANT_READ) {
                 free(ptr)
                 free(readLenPtr)

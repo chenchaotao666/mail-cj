@@ -36,9 +36,10 @@ public func sendWithSMTPMessage(): Unit {
         + "3. DSN 通知：服务器在成功/失败时发送通知\n"
         + "4. 8BITMIME：无需 Base64 编码", "UTF-8")
 
-    // MAIL FROM 信封地址（退信回到专用地址，与 From 头无关）
-    let ts = DateTime.now().toUnixTimeStamp().toMilliseconds()
-    msg.setEnvelopeFrom("bounce-${ts}@example.com")
+    // MAIL FROM 信封地址
+    // 注意：QQ/163 等国内 SMTP 要求信封地址必须与认证用户一致，
+    // 企业自建服务器通常允许设为独立的退信地址（如 bounce@example.com）
+    msg.setEnvelopeFrom(cfg.mailFrom)
 
     // DSN：投递失败时通知，只返回邮件头（节省带宽）
     msg.setNotifyOptions(NOTIFY_FAILURE | NOTIFY_DELAY)
