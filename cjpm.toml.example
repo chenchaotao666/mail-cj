@@ -1,0 +1,25 @@
+[package]
+name = "mail"
+version = "0.1.0"
+description = "Cangjie Mail - SMTP email sending library for Cangjie language"
+cjc-version = "1.0.4"
+output-type = "static"
+
+[dependencies]
+
+# openHiTLS FFI 配置
+#
+# 推荐使用根目录 ./build.sh 自动生成此文件。
+#
+# 如需手动配置，将此文件复制为 cjpm.toml 并修改下方路径：
+#   cp cjpm.toml.example cjpm.toml
+#
+# 注意：cjpm 不支持 ~ 符号，必须使用绝对路径。
+# 常见安装位置：/home/YOUR_USERNAME/.local/lib/hitls
+[ffi.c]
+hitls_tls    = { path = "/path/to/your/hitls/lib" }
+hitls_crypto = { path = "/path/to/your/hitls/lib" }
+hitls_bsl    = { path = "/path/to/your/hitls/lib" }
+hitls_pki    = { path = "/path/to/your/hitls/lib" }
+hitls_auth   = { path = "/path/to/your/hitls/lib" }
+boundscheck  = { path = "/path/to/your/hitls/lib" }

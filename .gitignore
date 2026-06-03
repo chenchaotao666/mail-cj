@@ -1,6 +1,9 @@
 # Build output
 target/
 
+# 本地配置（包含本地路径，由 build.sh 自动生成）
+cjpm.toml
+
 # Lock files
 cjpm.lock
 
@@ -13,6 +16,3 @@ cjpm.lock
 # IDE
 .vscode/
 .idea/
-
-# Reference repos
-angus-mail/
