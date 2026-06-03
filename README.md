@@ -81,41 +81,7 @@ try {
 
 ## 示例程序
 
-`examples/` 目录包含 16 个场景，与 `angus-examples/`（Jakarta Mail 实现）一一对标。
-
-```bash
-cd examples
-cp .env.example .env
-# 编辑 .env 填写 SMTP 配置
-
-cjpm run --run-args="--01"   # 纯文本邮件
-cjpm run --run-args="--02"   # HTML 邮件
-cjpm run --run-args="--03"   # 带附件邮件
-cjpm run --run-args="--04"   # HTML + 内嵌图片
-cjpm run --run-args="--05"   # 复杂邮件（HTML + 图片 + 附件）
-cjpm run --run-args="--06"   # 多收件人（TO / CC / BCC）
-cjpm run --run-args="--07"   # STARTTLS（587 端口）
-cjpm run --run-args="--08"   # Reply-To 与 reply() 回复
-cjpm run --run-args="--09"   # 群发（单连接）
-cjpm run --run-args="--10"   # 自定义邮件头 + Sender 代发
-cjpm run --run-args="--11"   # multipart/alternative 文本/HTML 兼容
-cjpm run --run-args="--12"   # 从 InputStream 加载模板
-cjpm run --run-args="--13"   # SMTPMessage 信封 From + DSN 通知
-cjpm run --run-args="--14"   # TransportListener + ConnectionListener
-cjpm run --run-args="--15"   # 长连接保活（心跳 NOOP）
-cjpm run --run-args="--16"   # XOAUTH2 OAuth2 认证
-```
-
-`.env` 必填配置项：
-
-| 变量 | 说明 | 示例 |
-|------|------|------|
-| `SMTP_HOST` | SMTP 服务器 | `smtp.qq.com` |
-| `SMTP_PORT` | SMTP 端口 | `465` |
-| `SMTP_USER` | 账户名（邮箱地址） | `user@qq.com` |
-| `SMTP_PASSWORD` | 授权码（非登录密码） | `xxxxxxxx` |
-| `MAIL_FROM` | 发件人地址 | `user@qq.com` |
-| `MAIL_TO` | 收件人地址 | `recipient@example.com` |
+`examples/` 目录包含 16 个发送场景，与 `angus-examples/`（Jakarta Mail 实现）一一对标，详见 [examples/README.md](examples/README.md)。
 
 ## 测试
 
