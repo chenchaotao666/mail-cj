@@ -23,19 +23,20 @@
 
 ### 1. 安装 openHiTLS
 
-参考 [openHiTLS 官方文档](https://gitee.com/openHiTLS/openHiTLS) 编译安装，默认安装到 `~/.local`。
-
-### 2. 配置运行时库路径
-
-添加到 `~/.bashrc` 或 `~/.zshrc` 永久生效：
+**编译安装（安装到 `~/.local`）：**
 
 ```bash
-export LD_LIBRARY_PATH=$HOME/.local/lib/hitls:$LD_LIBRARY_PATH
+git clone https://gitcode.com/openhitls/openhitls.git
+cd openhitls
+mkdir -p build && cd build
+cmake -DCMAKE_INSTALL_PREFIX=$HOME/.local ..
+make -j$(nproc)
+make install
 ```
 
-> 这一步让系统在**运行时**能找到 `.so` 动态库文件。
+安装完成后库文件位于 `~/.local/lib/`，头文件位于 `~/.local/include/`。
 
-### 3. 克隆并构建
+### 2. 克隆并构建
 
 ```bash
 git clone git@github.com:chenchaotao666/mail-cj.git
@@ -44,8 +45,6 @@ cd mail-cj
 ```
 
 脚本会自动将检测到的路径写入 `cjpm.toml`，无需手动编辑。
-
-> **手动构建说明：** `cjpm build` 在**编译时**需要 `cjpm.toml` 的 `[ffi.c]` 指定链接库路径，与运行时的 `LD_LIBRARY_PATH` 是两个独立配置，两者缺一不可。如需手动配置，将 `examples/cjpm.toml.example` 复制为 `cjpm.toml` 并将 `/path/to/your/hitls/lib` 改为实际绝对路径（不支持 `~`）。
 
 ## 快速开始
 
@@ -122,7 +121,7 @@ cjpm run --run-args="--16"   # XOAUTH2 OAuth2 认证
 
 ```bash
 cjpm test
-# TOTAL: 38, PASSED: 38
+# TOTAL: 222, PASSED: 222
 ```
 
 ## 项目结构
@@ -148,7 +147,7 @@ mail-cj/
 
 - [仓颉编程语言](https://developer.huawei.com/consumer/cn/cangjie/)
 - [openHiTLS](https://gitee.com/openHiTLS/openHiTLS)
-- [Jakarta Mail](https://eclipse-ee4j.github.io/mail/)
+- [Angus Mail](https://eclipse-ee4j.github.io/angus-mail/)
 
 ## 许可证
 
